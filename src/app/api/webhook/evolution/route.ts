@@ -53,11 +53,29 @@ export async function POST(request: Request) {
       const tenantRaw = (report.activaqr2_units as any).activaqr2_tenants;
       const tenant = Array.isArray(tenantRaw) ? tenantRaw[0] : tenantRaw;
       
-      const vcardName = tenant.vcard_name || tenant.name || 'Soporte ActivaQR';
+      let vcardName = tenant.name || 'Soporte ActivaQR';
+      let vcardTitle = '';
+      let vcardWebsite = '';
+      let vcardAddress = '';
+      
+      try {
+        if (tenant.vcard_name?.startsWith('{')) {
+          const parsed = JSON.parse(tenant.vcard_name);
+          vcardName = parsed.name || tenant.name;
+          vcardTitle = parsed.title ? `\nTITLE:${parsed.title}` : '';
+          vcardWebsite = parsed.website ? `\nURL:${parsed.website}` : '';
+          vcardAddress = parsed.address ? `\nADR;TYPE=WORK:;;${parsed.address};;;;` : '';
+        } else if (tenant.vcard_name) {
+          vcardName = tenant.vcard_name;
+        }
+      } catch(e) {}
+
       const waNumber = tenant.whatsapp_number || 'Soporte';
+      const vcardPhoto = tenant.logo_url ? `\nPHOTO;VALUE=URI:${tenant.logo_url}` : '';
+      const vcardEmail = tenant.linked_email ? `\nEMAIL;type=WORK:${tenant.linked_email}` : '';
 
       // 4. Generación de vCard Dinámica
-      const vcardString = `BEGIN:VCARD\nVERSION:3.0\nFN:${vcardName}\nORG:${tenant.name}\nTEL;TYPE=WORK,VOICE;waid=${waNumber}:${waNumber}\nNOTE:Soporte Oficial - Ticket #${ticketId}\nEND:VCARD`;
+      const vcardString = `BEGIN:VCARD\nVERSION:3.0\nFN:${vcardName}\nORG:${tenant.name}${vcardTitle}${vcardWebsite}${vcardAddress}${vcardPhoto}\nTEL;TYPE=WORK,VOICE;waid=${waNumber}:+${waNumber}${vcardEmail}\nNOTE:Soporte Oficial - Ticket #${ticketId}\nEND:VCARD`;
 
       // 5. Envío de vCard vía Evolution API
       // Usamos el endpoint sendContact que es más "nativo"

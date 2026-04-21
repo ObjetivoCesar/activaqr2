@@ -33,10 +33,11 @@ export async function getUnitsByTenant(tenantId: string) {
 export async function getReportsByTenant(tenantId: string, options: { 
   status?: string, 
   is_urgent?: boolean,
+  unitId?: string,
   page?: number,
   pageSize?: number 
 } = {}) {
-  const { status, is_urgent, page = 1, pageSize = 10 } = options;
+  const { status, is_urgent, unitId, page = 1, pageSize = 10 } = options;
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
@@ -53,6 +54,10 @@ export async function getReportsByTenant(tenantId: string, options: {
 
   if (is_urgent !== undefined) {
     query = query.eq('is_urgent', is_urgent);
+  }
+
+  if (unitId && unitId !== 'all') {
+    query = query.eq('unit_id', unitId);
   }
 
   return await query;

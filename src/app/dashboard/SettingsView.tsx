@@ -25,13 +25,27 @@ export default function SettingsView({ tenant, brandColor }: SettingsViewProps) 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
   
-  const [formData, setFormData] = useState({
-    name: tenant?.name || '',
-    brand_color: tenant?.brand_color || '#2563eb',
-    logo_url: tenant?.logo_url || '',
-    whatsapp_number: tenant?.whatsapp_number || '',
-    linked_email: tenant?.linked_email || '',
-    vcard_name: tenant?.vcard_name || ''
+  const [formData, setFormData] = useState(() => {
+    let parsedVcard: any = {};
+    try {
+      if (tenant?.vcard_name?.startsWith('{')) {
+        parsedVcard = JSON.parse(tenant.vcard_name);
+      } else {
+        parsedVcard.name = tenant?.vcard_name || '';
+      }
+    } catch(e) {}
+
+    return {
+      name: tenant?.name || '',
+      brand_color: tenant?.brand_color || '#2563eb',
+      logo_url: tenant?.logo_url || '',
+      whatsapp_number: tenant?.whatsapp_number || '',
+      linked_email: tenant?.linked_email || '',
+      vcard_name: parsedVcard.name || '',
+      vcard_title: parsedVcard.title || '',
+      vcard_website: parsedVcard.website || '',
+      vcard_address: parsedVcard.address || ''
+    };
   });
 
   const handleSave = async () => {
@@ -47,7 +61,21 @@ export default function SettingsView({ tenant, brandColor }: SettingsViewProps) 
     setMessage(null);
     
     try {
-      const result = await updateTenantAction(tenant.id, formData);
+      const payload = {
+        name: formData.name,
+        brand_color: formData.brand_color,
+        logo_url: formData.logo_url,
+        whatsapp_number: formData.whatsapp_number,
+        linked_email: formData.linked_email,
+        vcard_name: JSON.stringify({
+          name: formData.vcard_name,
+          title: formData.vcard_title,
+          website: formData.vcard_website,
+          address: formData.vcard_address
+        })
+      };
+
+      const result = await updateTenantAction(tenant.id, payload);
 
       if (!result.success) {
         throw new Error(result.error);
@@ -219,6 +247,49 @@ export default function SettingsView({ tenant, brandColor }: SettingsViewProps) 
               </div>
             </div>
 
+            <div>
+              <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Nombre en Contacto (vCard)</label>
+              <input 
+                type="text" 
+                value={formData.vcard_name}
+                onChange={e => setFormData({...formData, vcard_name: e.target.value})}
+                placeholder="Ej. Soporte Empresa"
+                className="w-full nm-inset p-3 rounded-xl text-sm border-none focus:ring-2 focus:ring-brand"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Cargo / Título (vCard)</label>
+              <input 
+                type="text" 
+                value={formData.vcard_title}
+                onChange={e => setFormData({...formData, vcard_title: e.target.value})}
+                placeholder="Ej. Atención al Cliente"
+                className="w-full nm-inset p-3 rounded-xl text-sm border-none focus:ring-2 focus:ring-brand"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Sitio Web (vCard)</label>
+              <input 
+                type="url" 
+                value={formData.vcard_website}
+                onChange={e => setFormData({...formData, vcard_website: e.target.value})}
+                placeholder="https://miempresa.com"
+                className="w-full nm-inset p-3 rounded-xl text-sm border-none focus:ring-2 focus:ring-brand"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[10px] font-black text-zinc-400 uppercase tracking-widest mb-1.5 ml-1">Dirección Física (vCard)</label>
+              <input 
+                type="text" 
+                value={formData.vcard_address}
+                onChange={e => setFormData({...formData, vcard_address: e.target.value})}
+                placeholder="Ej. Av. Principal 123"
+                className="w-full nm-inset p-3 rounded-xl text-sm border-none focus:ring-2 focus:ring-brand"
+              />
+            </div>
             {/* Notificaciones removidas - Se manejan por unidad individual en la pestaña Flota */}
           </div>
         </div>

@@ -63,6 +63,7 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const recognitionRef = useRef<any>(null);
 
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
@@ -96,24 +97,43 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
   }, [isRecording]);
 
   const generateAndDownloadVCard = () => {
-    if (!whatsappNumber) return;
+    const tenant = branding as Tenant;
+    let vcardName = tenant?.name || 'Soporte ActivaQR';
+    let vcardTitle = '';
+    let vcardWebsite = '';
+    let vcardAddress = '';
+    
+    try {
+      if (tenant?.vcard_name?.startsWith('{')) {
+        const parsed = JSON.parse(tenant.vcard_name);
+        vcardName = parsed.name || tenant.name;
+        vcardTitle = parsed.title ? `\nTITLE:${parsed.title}` : '';
+        vcardWebsite = parsed.website ? `\nURL:${parsed.website}` : '';
+        vcardAddress = parsed.address ? `\nADR;TYPE=WORK:;;${parsed.address};;;;` : '';
+      } else if (tenant?.vcard_name) {
+        vcardName = tenant.vcard_name;
+      }
+    } catch(e) {}
+
+    const whatsapp = tenant?.whatsapp_number || '593999999999';
+    const vcardPhoto = tenant?.logo_url ? `\nPHOTO;VALUE=URI:${tenant.logo_url}` : '';
+    const vcardEmail = tenant?.linked_email ? `\nEMAIL;type=WORK:${tenant.linked_email}` : '';
+
     const vcardData = `BEGIN:VCARD
 VERSION:3.0
-N:;${tenantName} (ActivaQR2);;;
-FN:${tenantName} (ActivaQR2)
-TEL;TYPE=WORK,VOICE:+${whatsappNumber}
-URL:https://activaqr2.vercel.app/dashboard
-NOTE:Contacto de emergencia y soporte (Plataforma ActivaQR2)
+FN:${vcardName}
+ORG:${tenant?.name || 'ActivaQR'}${vcardTitle}${vcardWebsite}${vcardAddress}${vcardPhoto}
+TEL;type=WORK;waid=${whatsapp}:+${whatsapp}${vcardEmail}
 END:VCARD`;
 
     const blob = new Blob([vcardData], { type: 'text/vcard' });
     const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `contacto_${tenantName.replace(/\s+/g, '_')}.vcf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `soporte_${(tenant?.name || 'ActivaQR').replace(/\s+/g, '_')}.vcf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     URL.revokeObjectURL(url);
   };
 
@@ -173,6 +193,36 @@ END:VCARD`;
 
       recorder.start();
       setIsRecording(true);
+
+      // Iniciar reconocimiento de voz
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'es-ES';
+
+        let finalTranscript = content;
+
+        recognition.onresult = (event: any) => {
+          let interimTranscript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+              finalTranscript += event.results[i][0].transcript;
+              setContent(finalTranscript);
+            } else {
+              interimTranscript += event.results[i][0].transcript;
+            }
+          }
+          setContent(finalTranscript + interimTranscript);
+        };
+
+        recognition.start();
+        recognitionRef.current = recognition;
+      } else {
+        console.warn("Reconocimiento de voz no soportado en este navegador.");
+      }
+
     } catch (err) {
       console.error('Error al acceder al micrófono:', err);
       alert('No se pudo acceder al micrófono. Por favor, verifica los permisos.');
@@ -183,6 +233,10 @@ END:VCARD`;
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
     }
   };
 
@@ -402,7 +456,7 @@ END:VCARD`;
               {[
                  { id: 'felicitacion', label: 'Felicitaciones', sub: 'Compartir experiencia positiva', icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
                  { id: 'reporte', label: 'Reporte de Novedad', sub: 'Observación estándar', icon: AlertTriangle, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-                 { id: 'queja', label: 'Emergencia / Auxilio', sub: 'Atención inmediata', icon: MessageSquare, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
+                 { id: 'queja', label: 'Queja o Reclamo', sub: 'Atención a inconvenientes', icon: MessageSquare, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
               ].map((opt) => (
                 <button 
                   key={opt.id}
@@ -456,9 +510,37 @@ END:VCARD`;
               {!ticket && (
                  <div className="flex justify-start">
                     <div className="vision-card p-6 border-border/20 shadow-3xl max-w-[90%] bg-card backdrop-blur-3xl">
-                       <p className="text-sm md:text-base font-medium text-foreground/90 leading-relaxed italic">
-                          Entendido. Por favor, proporciona los detalles operativos a continuación. Puedes incluir evidencia en alta resolución para una resolución más rápida.
-                       </p>
+                       <div className="text-sm md:text-base font-medium text-foreground/90 leading-relaxed italic">
+                          {type === 'felicitacion' && (
+                            <>
+                              <p className="mb-2">¡Gracias por elegirnos!</p>
+                              <ul className="list-disc pl-5 space-y-1 marker:text-brand">
+                                <li>¿Qué te ha gustado de nuestro servicio?</li>
+                                <li>¿Qué sugerencias propones para seguir mejorando?</li>
+                              </ul>
+                            </>
+                          )}
+                          {type === 'reporte' && (
+                            <>
+                              <p className="mb-2">Entendido. Por favor detalla:</p>
+                              <ul className="list-disc pl-5 space-y-1 marker:text-brand">
+                                <li>¿Qué novedad tienes de nuestro servicio?</li>
+                                <li>Agrega cualquier observación adicional.</li>
+                                <li>Adjunta evidencia (fotos, videos o audio) si es necesario.</li>
+                              </ul>
+                            </>
+                          )}
+                          {type === 'queja' && (
+                            <>
+                              <p className="mb-2">Lamentamos el inconveniente. Por favor, cuéntanos:</p>
+                              <ul className="list-disc pl-5 space-y-1 marker:text-brand">
+                                <li>¿Qué sucedió exactamente?</li>
+                                <li>¿Por qué presentas esta queja o reclamo?</li>
+                                <li>Puedes añadir fotos o audios como evidencia de tu caso.</li>
+                              </ul>
+                            </>
+                          )}
+                       </div>
                        <div className="mt-4 flex items-center gap-3">
                           <div className="w-1.5 h-1.5 rounded-full bg-brand animate-ping"></div>
                           <span className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.3em]">Listo para recibir información</span>

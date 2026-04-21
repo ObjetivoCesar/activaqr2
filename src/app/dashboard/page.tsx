@@ -90,6 +90,7 @@ export default async function Dashboard({
     const { data: reports, count } = await getReportsByTenant(tenantId, {
       status,
       is_urgent: isUrgent,
+      unitId: selectedUnitId,
       page: currentPage,
       pageSize: itemsPerPage
     });
@@ -334,16 +335,27 @@ export default async function Dashboard({
                                        <Eye className="w-3 h-3 text-brand" /> Evidence Attachment
                                     </h4>
                                     <div className="relative group/media overflow-hidden rounded-3xl border border-border/40 shadow-2xl bg-background/50">
-                                       {rep.media_type === 'video' ? (
-                                         <video src={rep.media_url} controls className="w-full aspect-video object-cover" />
-                                       ) : (
-                                         <img src={rep.media_url} alt="Evidencia" className="w-full h-auto object-contain max-h-[500px]" />
-                                       )}
-                                       <div className="absolute top-4 right-4 p-3 vision-pill text-foreground opacity-0 group-hover/media:opacity-100 transition-all duration-300 backdrop-blur-xl">
-                                          <Link href={rep.media_url} target="_blank" className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
-                                             Original <Eye className="w-3 h-3" />
-                                          </Link>
-                                       </div>
+                                      <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto">
+                                        {rep.media_url.split(',').map((url, idx) => {
+                                          const cleanUrl = url.trim();
+                                          if (cleanUrl.includes('audios/')) {
+                                            return <audio key={idx} src={cleanUrl} controls className="w-full col-span-full h-10 rounded-xl" />;
+                                          } else if (cleanUrl.includes('videos/') || cleanUrl.endsWith('.mp4') || (cleanUrl.endsWith('.webm') && !cleanUrl.includes('audios/'))) {
+                                            return <video key={idx} src={cleanUrl} controls className="w-full aspect-square object-cover rounded-2xl border border-border/20 shadow-inner bg-black/5" />;
+                                          } else {
+                                            return (
+                                              <a key={idx} href={cleanUrl} target="_blank" rel="noreferrer" className="block w-full aspect-square relative rounded-2xl overflow-hidden border border-border/20 shadow-inner bg-black/5 group-hover/media:opacity-90 hover:!opacity-100 transition-opacity">
+                                                <img src={cleanUrl} alt={`Evidencia ${idx + 1}`} className="w-full h-full object-cover" />
+                                              </a>
+                                            );
+                                          }
+                                        })}
+                                      </div>
+                                      <div className="absolute top-4 right-4 p-3 vision-pill text-foreground opacity-0 group-hover/media:opacity-100 transition-all duration-300 backdrop-blur-xl pointer-events-none">
+                                         <div className="text-[10px] font-black uppercase tracking-widest flex items-center gap-2">
+                                            Evidencia <Eye className="w-3 h-3" />
+                                         </div>
+                                      </div>
                                     </div>
                                  </div>
                               )}
