@@ -1,0 +1,314 @@
+PDR
+Plan de Desarrollo y Requerimientos
+
+QR Fleet Reviews
+
+Sistema SaaS de Calidad de Servicio para Flotas de Transporte
+
+Desarrollado por OBJETIVO
+Loja, Ecuador
+
+Versión 1.0  |  Confidencial
+ 
+1. Resumen Ejecutivo
+QR Fleet Reviews es una plataforma SaaS multitenancy que permite a cooperativas de transporte (taxis, buses, transporte escolar) recopilar retroalimentación de pasajeros mediante códigos QR instalados en cada unidad. El pasajero escanea el QR y envía su calificación con evidencia multimedia a través de WhatsApp o formulario web. El sistema procesa la información de forma automática, notifica a directivos y genera informes inteligentes.
+
+El modelo de negocio cobra por unidad activa al mes, con infraestructura propia compartida entre todos los clientes (multitenancy), manteniendo los costos operativos por debajo de $70 USD mensuales incluso con 10 cooperativas activas.
+
+1.1 Problema que resuelve
+•	Las cooperativas de transporte no tienen visibilidad en tiempo real de la calidad del servicio de cada unidad.
+•	Los pasajeros insatisfechos no tienen un canal formal, rápido y sin fricciones para reportar.
+•	Las soluciones existentes (Google Forms, encuestas manuales) no generan inteligencia accionable para los directivos.
+•	No existe un sistema que combine evidencia multimedia (foto, video, audio) con geolocalización y hora automática.
+
+1.2 Propuesta de valor
+•	Para el pasajero: reporta en menos de 2 minutos desde WhatsApp o web, sin instalar apps, y recibe un número de ticket de confirmación.
+•	Para el directivo: dashboard en tiempo real, alertas inmediatas por WhatsApp en casos urgentes, e informes semanales generados automáticamente.
+•	Para la cooperativa: imagen institucional premium con landing page propia y marca blanca del sistema.
+•	Para OBJETIVO: ingreso recurrente mensual escalable, con costo marginal cercano a cero por nuevo cliente.
+ 
+2. Arquitectura del Sistema
+2.1 Visión general
+El sistema opera con una arquitectura de multitenancy por esquema de base de datos: un solo backend atiende a todos los clientes, pero cada cooperativa tiene su propio schema aislado en PostgreSQL, su propio bucket de almacenamiento temporal y su propia instancia de notificaciones WhatsApp.
+
+Canal WhatsApp
+
+El pasajero escanea el QR → abre chat con el numero de la cooperativa → bot con menu rigido recopila tipo de reporte, unidad, descripcion, archivos multimedia → confirma con numero de ticket.	Canal Web
+
+El pasajero escanea el QR → formulario HTML estatico en Cloudflare Pages → sube archivos directamente a R2 → backend registra el reporte → confirma con numero de ticket.
+
+2.2 Stack tecnológico
+Todos los componentes seleccionados priorizan costo cero o costo mínimo, sin sacrificar capacidad de producción.
+
+Componente	Tecnología	Costo/mes	Justificación
+Frontend QR	HTML estático — Cloudflare Pages	$0	CDN global gratis
+Dashboard admin	Next.js — Vercel	$0	Tier gratuito suficiente
+Backend API	Node.js / Fastify — Hetzner VPS	~$20	VPS compartido multitenancy
+Base de datos	PostgreSQL self-hosted en VPS	$0	Schema por tenant
+Cola de tareas	BullMQ + Redis	$0	Procesamiento asíncrono
+Storage multimedia	Cloudflare R2	~$5-15	Sin egress fees, TTL 90 días
+Transcripción audio	Whisper (local en VPS)	$0	Open source, español nativo
+Generación informes	Ollama + Llama3 (local)	$0	IA en servidor propio
+WhatsApp bot	Evolution API (self-hosted)	$0	Webhook a nuestro backend
+Notificaciones	Evolution API saliente	$0	Misma instancia
+QR generation	qrcode npm library	$0	Generado en backend
+Auth dashboard	NextAuth.js + JWT	$0	Por tenant
+
+2.3 Estrategia de almacenamiento — costo cero operativo
+El mayor riesgo de costo está en el almacenamiento de multimedia. La estrategia combina tres principios:
+
+•	TTL agresivo: fotos, videos y audios se eliminan automáticamente a los 90 días. El valor está en el dato procesado (texto), no en el archivo original.
+•	Compresión antes de guardar: video recomprimido a 480p, audio a 64kbps mono. Reducción del 70-80% del peso sin perder utilidad del reporte.
+•	Canal WhatsApp como storage temporal: cuando el reporte llega por WhatsApp, Meta almacena el archivo. Nuestro backend descarga, transcribe con Whisper, guarda el texto y descarta el archivo. Storage propio: cero.
+•	Límite de duración de audio: máximo 60 segundos en el formulario. Suficiente para cualquier queja, elimina abuso y controla la carga del transcriptor.
+ 
+3. Módulos del Sistema
+Módulo 1 — Gestión de Tenants (Cooperativas)
+El núcleo del negocio. Cada cooperativa que contrata el servicio es un tenant con aislamiento completo de datos, identidad visual propia y configuración independiente.
+•	Alta de nuevo tenant: nombre, logo, colores, dominio personalizado (cooperativa.reportes.tudominio.com).
+•	Creación automática de schema PostgreSQL aislado al activar el tenant.
+•	Generación de credenciales de acceso al dashboard para administradores.
+•	Configuración del número WhatsApp asociado a la cooperativa.
+•	Panel de control de OBJETIVO para ver todos los tenants, su estado, unidades activas y facturación.
+
+Módulo 2 — Generador de Códigos QR
+Cada unidad de la flota tiene un QR único e irrepetible que identifica el tenant y la unidad. Este QR es el punto de entrada al sistema.
+•	Registro de unidades: placa, número de unidad, conductor asignado (opcional).
+•	Generación automática de QR por unidad con URL codificada: ?tenant=coop_austro&unit=023.
+•	Descarga individual (PNG, SVG) y descarga masiva en PDF listo para impresión.
+•	QR con branding: logo de la cooperativa en el centro del código.
+•	Reactivación/desactivación de QR por unidad sin romper el histórico.
+•	Vista previa del QR antes de imprimir con instrucciones para el pasajero.
+
+Módulo 3 — Formulario de Reporte (Canal Web)
+Formulario HTML estático, ultra liviano, que carga en menos de 2 segundos en cualquier celular. No requiere login del pasajero.
+•	Identificación automática de tenant y unidad por parámetros del QR.
+•	Selección de tipo: Queja / Sugerencia / Comentario.
+•	Campo de texto libre (descripción del incidente).
+•	Adjuntar fotos (máximo 3, compresión automática client-side).
+•	Adjuntar video (máximo 30 segundos, límite de 20MB).
+•	Adjuntar audio (máximo 60 segundos, grabación desde el navegador).
+•	Captura automática de hora y geolocalización (con permiso del pasajero).
+•	Confirmación con número de ticket al finalizar.
+•	Diseño con colores y logo de la cooperativa (personalizado por tenant).
+
+Módulo 4 — Bot WhatsApp (Canal Conversacional)
+Menú completamente rígido via Evolution API. El pasajero no puede salirse del flujo predefinido. Si escribe algo fuera del menú, el bot responde: 'Por favor selecciona una opción.'
+•	Activación: el QR abre directamente el chat de WhatsApp con el número de la cooperativa.
+•	Menú principal: 1) Queja  2) Sugerencia  3) Comentario.
+•	Solicitud secuencial: número de unidad → descripción → ¿adjuntar evidencia? (fotos / video / audio / no).
+•	Recepción y descarga inmediata del archivo multimedia desde los servidores de Meta.
+•	Transcripción automática de audio con Whisper local. El archivo se descarta tras la transcripción.
+•	Confirmación final con número de ticket y tiempo estimado de revisión (ej: 'Un coordinador revisará tu reporte en las próximas 2 horas').
+•	Personalidad del bot con nombre e identidad definida por la cooperativa (ej: 'Sofia, Asistente de Calidad Cooperativa Austro').
+
+Módulo 5 — Motor de Procesamiento (Backend IA)
+Cola de procesamiento asíncrono con BullMQ. Los reportes entran a la cola y se procesan en orden sin picos de carga. La IA corre en el mismo VPS, sin costo de API externa.
+•	Clasificación automática de urgencia: reportes con palabras clave críticas (accidente, agresión, peligro, robo) se marcan como URGENTE.
+•	Análisis de sentimiento: positivo / neutral / negativo por reporte.
+•	Transcripción de audio (Whisper): genera texto del audio del pasajero.
+•	Resumen automático de texto libre si supera 200 caracteres.
+•	Extracción de entidades: menciona conductor, hora específica, lugar.
+•	Almacenamiento del reporte procesado en el schema del tenant correspondiente.
+•	Trigger de notificación inmediata si el reporte es URGENTE.
+
+Módulo 6 — Sistema de Notificaciones
+Dos niveles de notificación según urgencia del reporte, enviados por WhatsApp al directivo configurado.
+•	Notificación urgente (inmediata): incluye tipo de reporte, unidad, resumen de la denuncia y enlace al dashboard.
+•	Notificación de resumen diario: enviada cada noche con el total de reportes del día por tipo.
+•	Informe semanal (lunes 7am): resumen narrativo generado por Ollama con ranking de unidades, hora crítica, tendencia y enlace al informe completo.
+•	Configuración de destinatarios por tenant: presidente, secretario, vocal de control — cada uno con su nivel de acceso.
+•	Plantillas de mensaje personalizables por tenant.
+
+Módulo 7 — Dashboard Ejecutivo
+La herramienta más importante para la percepción de valor premium. Es lo que diferencia el producto de Google Forms y cualquier solución artesanal.
+•	Acceso por subdominio propio: cooperativa.reportes.tudominio.com
+•	Login con credenciales por rol: Admin / Director / Solo lectura.
+•	Métricas principales: total de reportes, rating promedio de flota, reportes sin gestionar, trend vs semana anterior.
+•	Mapa de calor por horario: visualización de cuándo se generan más reportes (hora del día × día de semana).
+•	Ranking de unidades: las 5 mejores y las 5 peores del período seleccionado.
+•	Historial de reportes con filtros: por unidad, por tipo, por estado (nuevo / en revisión / resuelto), por rango de fechas.
+•	Vista detallada del reporte: texto, fotos, audio transcrito, geolocalización en mapa, hora exacta.
+•	Gestión de estado: marcar reporte como 'En revisión' o 'Resuelto' con nota interna.
+•	Nube de palabras: términos más frecuentes en los reportes del período.
+•	Exportación de reportes a PDF o Excel.
+
+Módulo 8 — Generador de Informes
+Los informes se generan automáticamente con IA local (Ollama/Llama3) en segundo plano, sin costo de API. Se procesan de noche cuando el servidor está ocioso.
+•	Informe semanal: narrativo, con ranking de unidades, hora crítica, comparativa vs semana anterior, recomendaciones automáticas.
+•	Informe mensual: visión amplia con tendencias, evolución del rating de cada unidad, conductor con más quejas, estadísticas por tipo de reporte.
+•	Informe a demanda: el directivo puede generar un informe de cualquier período desde el dashboard.
+•	Formato de entrega: PDF descargable + resumen enviado por WhatsApp.
+•	Datos cruzados: hora del reporte × unidad × tipo para detectar patrones operativos.
+
+Módulo 9 — Panel de Administración OBJETIVO (Super Admin)
+Panel privado de OBJETIVO para gestionar todos los tenants desde una sola interfaz.
+•	Vista global de todos los clientes activos y su estado.
+•	Creación y configuración de nuevos tenants.
+•	Control de unidades activas por tenant (base para la facturación).
+•	Activación / suspensión de tenants por falta de pago.
+•	Métricas globales: reportes procesados totales, uso de storage, carga del servidor.
+•	Gestión de actualizaciones del sistema sin afectar tenants activos.
+ 
+4. Hitos de Desarrollo por Etapa
+Cada etapa debe completarse en su totalidad antes de avanzar a la siguiente. Los hitos marcados como bloqueantes son obligatorios; los no bloqueantes pueden resolverse en paralelo con la siguiente etapa si no afectan el flujo principal.
+
+Etapa 1 — Infraestructura Base
+Sin esta etapa no existe sistema. Todo lo demás depende de ella.
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	VPS Hetzner contratado y configurado con Docker + Coolify	Acceso SSH funcional, contenedores arriba	✓ SÍ
+2	PostgreSQL corriendo en VPS con schema por tenant funcional	Crear schema, insertar datos, aislar por tenant verificado	✓ SÍ
+3	Redis + BullMQ instalados y cola de prueba funcional	Tarea entra a la cola y se procesa correctamente	✓ SÍ
+4	Cloudflare R2 configurado con bucket de prueba	Subir y recuperar archivo desde API	✓ SÍ
+5	Dominio base configurado con subdominios wildcard (*.reportes.tudominio.com)	Subdominio de prueba resuelve correctamente	✓ SÍ
+6	Whisper instalado localmente y transcripción de prueba en español	Audio de 30s transcrito correctamente en menos de 60s	✓ SÍ
+7	Ollama + Llama3 corriendo localmente	Prompt de prueba devuelve texto coherente en español	—
+8	Evolution API instalada y conectada a número WhatsApp de prueba	Enviar y recibir mensaje de texto desde API	✓ SÍ
+
+Etapa 2 — Backend Core y Multitenancy
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	API REST base con Fastify corriendo en VPS	Endpoint /health responde 200	✓ SÍ
+2	Sistema de autenticación por tenant (JWT con tenant_id embebido)	Token generado para tenant A no permite acceso a datos de tenant B	✓ SÍ
+3	CRUD de tenants (crear, activar, suspender) desde Super Admin	Crear tenant genera schema en BD y bucket en R2 automáticamente	✓ SÍ
+4	CRUD de unidades por tenant (alta, baja, edición)	Unidades quedan aisladas por tenant en la BD	✓ SÍ
+5	Endpoint de recepción de reportes (canal web)	Reporte con texto + foto entra a BD y a la cola de procesamiento	✓ SÍ
+6	Worker de procesamiento: clasificación de urgencia + sentimiento	Reporte urgente se marca correctamente en la BD	✓ SÍ
+7	Worker de transcripción: audio recibido pasa por Whisper y se guarda el texto	Texto transcrito legible y atribuido al reporte correcto	✓ SÍ
+8	Sistema de numeración de tickets por tenant (correlativo)	Tickets son únicos por tenant y no se repiten	✓ SÍ
+
+Etapa 3 — Formulario QR Web
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	HTML estático del formulario desplegado en Cloudflare Pages	Carga en menos de 2s en celular con datos móviles 4G	✓ SÍ
+2	Identificación de tenant y unidad desde parámetros del QR (?tenant=x&unit=y)	Formulario muestra nombre y logo de la cooperativa correcta	✓ SÍ
+3	Flujo completo de envío de texto libre	Texto llega a BD y genera ticket	✓ SÍ
+4	Subida de fotos con compresión automática client-side	Foto de 5MB se comprime a menos de 500KB antes de subir	✓ SÍ
+5	Subida de video (máximo 30s, 20MB)	Video sube y se guarda en R2 correctamente	—
+6	Grabación y subida de audio desde el navegador (máximo 60s)	Audio grabado en navegador móvil llega a BD y pasa por Whisper	✓ SÍ
+7	Captura de geolocalización con permiso del pasajero	Coordenadas se almacenan junto al reporte	—
+8	Pantalla de confirmación con número de ticket	Pasajero ve el ticket en menos de 3s tras enviar	✓ SÍ
+9	Personalización visual por tenant (colores, logo)	Dos tenants distintos muestran identidad visual diferente	✓ SÍ
+
+Etapa 4 — Bot WhatsApp
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Webhook de Evolution API recibe mensajes entrantes en backend	Mensaje de WhatsApp genera evento en el backend en tiempo real	✓ SÍ
+2	Identificación de tenant por número de WhatsApp del destinatario	Mensaje al número de Coop A no activa flujo de Coop B	✓ SÍ
+3	Menú rígido de nivel 1: Queja / Sugerencia / Comentario	Mensaje fuera del menú devuelve 'Selecciona una opción'	✓ SÍ
+4	Flujo completo de recolección: unidad → descripción → ¿adjuntar?	Reporte completo llega a BD desde WhatsApp	✓ SÍ
+5	Recepción y descarga de fotos enviadas por WhatsApp	Foto descargada y guardada en R2 antes de que el enlace de Meta expire	✓ SÍ
+6	Recepción y transcripción de audios de WhatsApp	Nota de voz transcrita y texto guardado en BD	✓ SÍ
+7	Recepción de videos de WhatsApp	Video recibido, guardado en R2 correctamente	—
+8	Confirmación de ticket por WhatsApp al pasajero	Pasajero recibe mensaje con su número de ticket	✓ SÍ
+9	Personalidad del bot configurable por tenant (nombre, saludo)	Bot de Coop A saluda diferente al de Coop B	—
+
+Etapa 5 — Generador de QR
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Generación de QR individual por unidad desde el backend	QR generado apunta a URL correcta con parámetros de tenant y unidad	✓ SÍ
+2	QR con logo de la cooperativa en el centro	QR es escaneable con logo incrustado (verificado en 3 lectores distintos)	✓ SÍ
+3	Descarga individual del QR en PNG y SVG	Archivos descargados correctamente desde el dashboard	✓ SÍ
+4	Generación y descarga masiva de QR en PDF (una página por QR)	PDF de 50 unidades generado en menos de 30 segundos	✓ SÍ
+5	Plantilla de QR con instrucciones para el pasajero ('Escanea y califica tu viaje')	Plantilla lista para impresión en tamaño A6 o sticker	—
+6	Desactivación de QR por unidad (redirige a página de 'unidad no activa')	QR desactivado no registra reportes	—
+
+Etapa 6 — Dashboard Ejecutivo
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Login funcional por subdominio de tenant con JWT	Admin de Coop A no puede ver datos de Coop B bajo ninguna circunstancia	✓ SÍ
+2	Vista principal: métricas clave del período (total reportes, rating, sin gestionar)	Datos en pantalla coinciden con los de la BD en tiempo real	✓ SÍ
+3	Historial de reportes con filtros básicos (fecha, tipo, unidad, estado)	Filtro por unidad devuelve solo reportes de esa unidad	✓ SÍ
+4	Vista detallada de reporte individual (texto, fotos, audio transcrito, mapa)	Toda la evidencia del reporte visible en una sola pantalla	✓ SÍ
+5	Gestión de estado de reporte (Nuevo / En revisión / Resuelto + nota interna)	Cambio de estado queda registrado con usuario y timestamp	✓ SÍ
+6	Mapa de calor por horario (hora × día de semana)	Visualización correcta con datos reales de al menos 20 reportes	—
+7	Ranking de unidades (mejor y peor del período)	Ranking calculado correctamente según promedio de calificaciones	✓ SÍ
+8	Exportación de reportes a Excel	Archivo Excel descargado con todos los campos del reporte	—
+9	Roles de acceso: Admin (todo) / Director (lectura + gestión) / Solo lectura	Usuario Solo lectura no puede cambiar estado de reportes	—
+
+Etapa 7 — Notificaciones y Alertas
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Notificación inmediata por WhatsApp al directivo en reportes URGENTES	Mensaje llega en menos de 60s desde que el pasajero envía el reporte urgente	✓ SÍ
+2	Resumen diario automático por WhatsApp (cron job a las 8pm)	Mensaje enviado correctamente con totales del día	✓ SÍ
+3	Informe semanal automático (cron job lunes 7am)	Informe narrativo generado por Ollama enviado por WhatsApp con enlace al PDF	✓ SÍ
+4	Configuración de destinatarios de notificaciones por tenant	Agregar o remover destinatarios desde el dashboard sin reiniciar el sistema	—
+5	Plantillas de mensaje personalizables por tenant	Tenant puede editar el texto de sus notificaciones desde el dashboard	—
+
+Etapa 8 — Generador de Informes con IA
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Prompt base en español para Ollama que genera el informe semanal narrativo	Informe legible, coherente y con datos reales del tenant	✓ SÍ
+2	Generación de informe semanal en PDF con formato de marca de la cooperativa	PDF descargable con logo, colores y datos del tenant correcto	✓ SÍ
+3	Informe mensual con tendencias y comparativa de unidades	Datos de 4 semanas consolidados correctamente	✓ SÍ
+4	Informe a demanda desde el dashboard (rango de fechas libre)	Informe generado en menos de 2 minutos para cualquier período	—
+5	Recomendaciones automáticas en el informe (detecta patrones y sugiere acciones)	Al menos 2 recomendaciones accionables por informe generadas por la IA	—
+
+Etapa 9 — Panel Super Admin OBJETIVO
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Vista global de todos los tenants con estado y conteo de unidades activas	Lista actualizada en tiempo real sin necesidad de recargar	✓ SÍ
+2	Crear nuevo tenant desde el panel (genera schema + bucket automáticamente)	Nuevo tenant operativo en menos de 2 minutos desde el panel	✓ SÍ
+3	Activar / suspender tenant sin borrar sus datos	Tenant suspendido no puede recibir reportes ni acceder al dashboard	✓ SÍ
+4	Control de unidades activas por tenant (base de facturación)	Conteo exacto de unidades activas disponible por tenant y por fecha	✓ SÍ
+5	Métricas globales de uso del sistema (storage, reportes, carga del servidor)	Métricas visibles y actualizadas en el panel	—
+
+Etapa 10 — Piloto con Cliente Real
+
+#	Hito	Criterio de aceptación	Bloquea siguiente etapa
+1	Tenant del cliente piloto creado y configurado con su identidad visual	Dashboard accesible en su subdominio con su logo y colores	✓ SÍ
+2	QR de al menos 5 unidades impresos e instalados en las unidades reales	QR escaneable con celular en condiciones reales de luz y ángulo	✓ SÍ
+3	Bot de WhatsApp activo con el número del cliente piloto	Flujo completo funcional desde el teléfono del pasajero	✓ SÍ
+4	Primer informe semanal real generado y enviado al directivo piloto	Directivo confirma recepción y legibilidad del informe	✓ SÍ
+5	Sesión de feedback con el cliente piloto documentada	Lista de ajustes priorizados antes del lanzamiento comercial	✓ SÍ
+6	Correcciones del piloto implementadas	Todos los ajustes críticos resueltos	✓ SÍ
+ 
+5. Modelo de Negocio
+5.1 Estructura de precios
+El cobro es por unidad activa al mes. Una unidad activa es toda unidad que tiene un QR vigente asociado al tenant. El directivo ve en tiempo real cuántas unidades tiene activas en su dashboard.
+
+Plan	Precio / unidad / mes	Incluye	Para quién
+Básico	$5 USD	QR + formulario web + dashboard básico	Flotas pequeñas (hasta 20 unidades)
+Estándar	$8 USD	Todo Básico + WhatsApp bot + informes IA + alertas	Cooperativas medianas (20-100 unidades)
+Premium	$12 USD	Todo Estándar + marca blanca completa + soporte prioritario + API	Flotas grandes (100+ unidades)
+
+5.2 Proyección de ingresos vs costos
+Escenario conservador con plan Estándar ($8/unidad/mes):
+
+Escenario	Unidades activas	Ingreso/mes	Costo infra/mes
+Piloto (1 coop)	50	$400	~$40
+Arranque (3 coops)	150	$1,200	~$50
+Crecimiento (6 coops)	300	$2,400	~$60
+Escala (10 coops)	500	$4,000	~$70
+ 
+6. Riesgos y Mitigaciones
+6.1 Riesgos técnicos
+•	Riesgo: WhatsApp bloquea el número por comportamiento de bot. Mitigación: usar números verificados de negocios (WhatsApp Business API), limitar mensajes automáticos y no enviar mensajes no solicitados.
+•	Riesgo: VPS se cae y el servicio queda fuera. Mitigación: backup automático diario, Coolify permite levantar contenedores en minutos. A futuro: replicar en segundo VPS.
+•	Riesgo: Whisper no transcribe correctamente el español ecuatoriano o acentos locales. Mitigación: usar modelo 'medium' de Whisper (mejor calidad en español) con ajuste de idioma explícito es-EC.
+•	Riesgo: R2 tiene outage y no se pueden subir archivos. Mitigación: guardar primero en disco local del VPS y replicar a R2 de forma asíncrona.
+
+6.2 Riesgos comerciales
+•	Riesgo: el cliente no renueva porque no ve valor. Mitigación: el informe del lunes es el argumento de retención. Si el directivo espera ese mensaje, no cancela.
+•	Riesgo: competencia copia el modelo. Mitigación: el diferencial no es la tecnología sino la integración completa (QR + WhatsApp + IA + marca blanca) a un precio inaccesible para un competidor artesanal.
+•	Riesgo: el pasajero no usa el QR. Mitigación: diseño del QR con instrucción clara y visible, colocado en lugar de alta visibilidad dentro de la unidad. La cooperativa tiene incentivo para promoverlo porque mejora su imagen.
+ 
+7. Glosario
+Tenant: cada cooperativa o empresa cliente del sistema. Comparte la infraestructura pero tiene datos completamente aislados.
+
+Multitenancy por schema: arquitectura donde cada tenant tiene su propio schema en la misma instancia de PostgreSQL, garantizando aislamiento sin el costo de bases de datos separadas.
+
+TTL (Time To Live): tiempo máximo de vida de un archivo en el sistema. Pasado ese tiempo, el archivo se elimina automáticamente.
+
+Evolution API: librería open source que permite enviar y recibir mensajes de WhatsApp mediante webhooks, sin depender de la API oficial de pago de Meta.
+
+Whisper: modelo de reconocimiento de voz de código abierto desarrollado por OpenAI, con soporte nativo para español. Se ejecuta localmente sin costo por uso.
+
+Ollama: plataforma para ejecutar modelos de lenguaje (LLM) localmente en el servidor, eliminando el costo de APIs externas como OpenAI para tareas de generación de texto.
+
+BullMQ: sistema de colas de tareas basado en Redis para Node.js. Permite procesar trabajos de forma asíncrona (transcripción, generación de informes) sin bloquear la API principal.
+
+Cloudflare R2: servicio de almacenamiento de objetos (similar a Amazon S3) de Cloudflare, sin costo de transferencia de datos saliente (egress), lo que elimina el principal factor de costo en sistemas con mucho multimedia.
+
+QR Fleet Reviews  —  PDR v1.0  —  OBJETIVO, Loja Ecuador

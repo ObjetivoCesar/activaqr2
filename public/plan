@@ -1,0 +1,55 @@
+# BACKLOG CRÍTICO — ACTIVAQR2 (Prioridad Máxima)
+
+## 🔴 CRÍTICO (Bloquea el lanzamiento)
+
+### TAREA 1: Autenticación del Dashboard
+- Implementar NextAuth.js en `/dashboard`
+- Crear tabla `activaqr2_users` con rol admin por tenant
+- Agregar middleware en `src/middleware.ts` que proteja `/dashboard`
+- Si no hay sesión activa, redirigir a `/login`
+
+### TAREA 2: Corregir Email Sender Domain
+- Configurar dominio propio en Resend (activaqr.com o similar)
+- Cambiar `from:` de `onboarding@resend.dev` a `noreply@[dominio-real]`
+- Sin esto, todos los correos van a SPAM
+
+### TAREA 3: Verificar Upload de Audio en handleSubmit
+- En `page.tsx > handleSubmit`, rastrear el flujo cuando `audioBlob` existe
+- Asegurar que el upload a Supabase Storage genere una URL pública válida
+- Verificar que `mediaUrl` y `mediaType: 'audio'` lleguen correctamente a la API
+
+### TAREA 4: Sanitizar Variables de Entorno
+- Eliminar las credenciales de admin hardcodeadas del `.env.local` (líneas 17-19)
+- Mover esas credenciales a un gestor de secretos o un `secrets.md` en `.gitignore`
+- Agregar `.env.local` al `.gitignore` si no está ya
+
+## 🟠 ALTA (Antes del primer cliente de pago)
+
+### TAREA 5: Aislar queries del dashboard por tenant_id
+- En `dashboard/page.tsx`, todas las queries `FROM activaqr2_reports` deben 
+  incluir `.eq('tenant_id', tenantId)` explícito cuando se usa Service Role
+- Crear una función helper `getReportsByTenant(tenantId)` en lugar 
+  de hacer queries directas en el componente
+
+### TAREA 6: Reemplazar API de QR externa
+- Instalar: `npm install qrcode`
+- Crear endpoint `GET /api/qr/[unitId]` que genere el QR en el servidor
+- Devolver imagen PNG de base64 sin dependencia externa
+
+### TAREA 7: Generador PDF masivo de QRs
+- Instalar: `npm install jspdf`
+- En `FleetManager.tsx`, agregar botón "Descargar todos los QRs (PDF)"
+- El PDF debe tener: logo del tenant, código de unidad, placa, y QR a 150x150px
+
+## 🟡 MEDIA (Antes de escalar)
+
+### TAREA 8: Blueprint de Autenticación Multi-Tenant
+- La sesión debe guardar el `tenantId` del usuario logueado
+- Todas las Server Actions deben leer el `tenantId` de la sesión, 
+  nunca del request body (evita manipulación cliente)
+
+### TAREA 9: Tests mínimos obligatorios
+- `createUnit.test.ts`: Verificar que la acción inserta correctamente
+- `updateReportStatus.test.ts`: Verificar que el status cambia a 'Revisado'
+- `reports/route.test.ts`: Verificar validación de campos requeridos
+- Instalar: `npm install -D jest @testing-library/react`
