@@ -205,7 +205,7 @@ export default function FleetManager({ units: initialUnits, tenantId, brandColor
           <div key={unit.id} className="vision-card p-6 flex flex-col md:flex-row items-center justify-between gap-6 hover:bg-accent/50 transition-all duration-300">
             <div className="flex items-center gap-6 w-full md:w-auto">
               <div className="w-14 h-14 vision-pill flex flex-col items-center justify-center text-foreground border border-border/60 dark:border-white/10 bg-background/80 shrink-0 shadow-lg">
-                <span className="text-[8px] font-black text-foreground/40 dark:text-white/30 leading-none mb-1">UNIT</span>
+                <span className="text-[8px] font-black text-foreground/40 dark:text-white/30 leading-none mb-1">SOCIO</span>
                 <span className="text-xl font-black tracking-tighter italic leading-none">{unit.unit_code}</span>
               </div>
               <div>

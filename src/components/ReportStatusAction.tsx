@@ -48,7 +48,7 @@ export default function ReportStatusAction({ reportId, currentStatus, brandColor
         <Loader2 className="w-3.5 h-3.5 animate-spin" />
       ) : (
         <>
-          <span className="tracking-[0.1em]">GESTIONAR</span>
+          <span className="tracking-[0.1em]">TOMAR ACCIÓN</span>
           <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
         </>
       )}

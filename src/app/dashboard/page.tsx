@@ -73,8 +73,8 @@ export default async function Dashboard({
 
   const stats = {
     total: allReports?.length || 0,
-    quejas: allReports?.filter((r: any) => r.type === 'queja' && r.is_urgent).length || 0,
-    sugerencias: allReports?.filter((r: any) => r.type === 'sugerencia').length || 0,
+    quejas: allReports?.filter((r: any) => r.type === 'queja' || r.is_urgent || (r.rating && r.rating <= 2)).length || 0,
+    sugerencias: allReports?.filter((r: any) => r.type === 'reporte').length || 0,
     felicitaciones: allReports?.filter((r: any) => r.type === 'felicitacion').length || 0,
   };
 
@@ -84,19 +84,34 @@ export default async function Dashboard({
   let totalPages = 0;
 
   if (currentTab !== 'config') {
-    const isUrgent = currentTab === 'criticos' ? true : undefined;
     const status = currentTab === 'resueltos' ? 'Revisado' : 'Nuevo';
 
-    const { data: reports, count } = await getReportsByTenant(tenantId, {
+    // Ajuste de consulta para incluir Reclamos y Novedades Urgentes
+    let queryOptions: any = {
       status,
-      is_urgent: isUrgent,
       unitId: selectedUnitId,
       page: currentPage,
       pageSize: itemsPerPage
-    });
+    };
 
-    reportsList = (reports as unknown as Report[]) || [];
-    totalItems = count || 0;
+    if (currentTab === 'criticos') {
+      // Si es la pestaña críticos, traemos quejas o urgentes
+      const { data: reports, count } = await supabase
+        .from('activaqr2_reports')
+        .select('*, activaqr2_units(unit_code)', { count: 'exact' })
+        .eq('tenant_id', tenantId)
+        .eq('status', 'Nuevo')
+        .or(`type.eq.queja,is_urgent.eq.true,rating.lte.2`)
+        .order('created_at', { ascending: false })
+        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
+      
+      reportsList = (reports as unknown as Report[]) || [];
+      totalItems = count || 0;
+    } else {
+      const { data: reports, count } = await getReportsByTenant(tenantId, queryOptions);
+      reportsList = (reports as unknown as Report[]) || [];
+      totalItems = count || 0;
+    }
     totalPages = Math.ceil(totalItems / itemsPerPage);
   }
 
@@ -127,27 +142,27 @@ export default async function Dashboard({
                 )}
              </div>
              <div>
-               <h1 className="text-sm md:text-base font-black tracking-tight text-white leading-none uppercase">{tenantName}</h1>
+               <h1 className="text-sm md:text-base font-black tracking-tight text-foreground leading-none uppercase">{tenantName}</h1>
                <div className="flex items-center gap-2 mt-1">
                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                 <span className="text-[8px] md:text-[9px] font-bold text-white/50 uppercase tracking-widest leading-none">Command Center</span>
+                 <span className="text-[8px] md:text-[9px] font-bold text-muted-foreground uppercase tracking-widest leading-none">PANEL DE CONTROL · {tenantName}</span>
                </div>
              </div>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="px-5 py-2 text-[10px] font-black bg-white/10 text-white rounded-full uppercase tracking-widest border border-white/20 backdrop-blur-sm relative group cursor-pointer">
-              <Bell className="w-4 h-4 text-white hover:text-brand transition-colors" />
-              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-zinc-900 animate-pulse"></div>
+            <div className="px-5 py-2 text-[10px] font-black bg-foreground/5 text-foreground rounded-full uppercase tracking-widest border border-border/20 backdrop-blur-sm relative group cursor-pointer">
+              <Bell className="w-4 h-4 text-foreground hover:text-brand transition-colors" />
+              <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background animate-pulse"></div>
             </div>
             <Link 
               href={`/?tenantId=${(tenant as Tenant)?.id}&unitId=${units?.[0]?.id}`} 
-              className="px-4 py-2 text-[10px] font-black text-white/70 hover:text-white transition-colors uppercase tracking-widest hidden md:block"
+              className="px-4 py-2 text-[10px] font-black text-muted-foreground hover:text-foreground transition-colors uppercase tracking-widest hidden md:block"
             >
               Simulador
             </Link>
             <div className="px-5 py-2 text-[10px] font-black bg-white/10 text-foreground rounded-full uppercase tracking-widest border border-border/40 backdrop-blur-sm">
-              Admin Mode
+              MODO ADMINISTRADOR
             </div>
             <ThemeToggle />
           </div>
@@ -195,17 +210,17 @@ export default async function Dashboard({
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-12">
             <div>
               <h2 className="text-3xl md:text-4xl font-black text-foreground leading-none tracking-tighter flex items-center gap-3">
-                Overview <Zap className="text-brand fill-current w-8 h-8" />
+                RESUMEN <Zap className="text-brand fill-current w-8 h-8" />
               </h2>
-              <p className="text-foreground/50 dark:text-white/40 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em] mt-3 italic">Live Fleet Intelligence & Safety Protocol</p>
+              <p className="text-foreground/50 dark:text-white/40 text-[10px] md:text-xs font-black uppercase tracking-[0.2em] mt-3 italic">LO QUE ESTÁ PASANDO EN TU COOPERATIVA · AHORA MISMO</p>
             </div>
 
             <div className="grid grid-cols-2 lg:flex items-center gap-4 w-full md:w-auto">
                {[
-                 { label: 'Total', val: stats.total, color: 'text-foreground' },
-                 { label: 'Críticos', val: stats.quejas, color: 'text-orange-500' },
+                 { label: 'Reportes Hoy', val: stats.total, color: 'text-foreground' },
+                 { label: 'Urgentes', val: stats.quejas, color: 'text-orange-500' },
                  { label: 'Felicitaciones', val: stats.felicitaciones, color: 'text-emerald-500' },
-                 { label: 'Ideas', val: stats.sugerencias, color: 'text-blue-500' },
+                 { label: 'Sugerencias', val: stats.sugerencias, color: 'text-blue-500' },
                ].map((s, i) => (
                  <div key={i} className="vision-pill px-6 py-3 min-w-[120px] text-center border-border/60 dark:border-white/10 bg-card/40 shadow-sm">
                     <p className="text-[8px] font-black text-foreground/50 dark:text-white/40 uppercase tracking-widest mb-1">{s.label}</p>
@@ -223,13 +238,13 @@ export default async function Dashboard({
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-4">
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="px-3 py-1 rounded-full bg-foreground/5 text-foreground/60 text-[9px] font-black uppercase tracking-[0.2em] border border-foreground/10">Comunicado Oficial</span>
+                <span className="px-3 py-1 rounded-full bg-foreground/5 text-foreground/60 text-[9px] font-black uppercase tracking-[0.2em] border border-foreground/10">AVISO DE LA DIRECTIVA</span>
               </div>
               <h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter mb-3">
-                Proyecto Escuela Interesante 2029-30
+                Recordatorio: Protocolo de atención al pasajero
               </h3>
               <p className="text-muted-foreground/80 text-sm md:text-base max-w-3xl leading-relaxed font-medium">
-                Iniciamos la fase de planificación estratégica para el ciclo 2029-30. Nuestra plataforma se integrará con nuevos protocolos de seguridad inteligente para maximizar la eficiencia operativa de tu flota.
+                Estimados socios: les recordamos que el trato al pasajero define el nombre de nuestra cooperativa. Cualquier calificación de 3 estrellas o menos generará un reporte automático a gerencia.
               </p>
               <div className="mt-6 flex items-center gap-4">
                  <div className="h-[1px] flex-1 bg-border/40" />
@@ -251,11 +266,11 @@ export default async function Dashboard({
               <div className="w-full xl:w-auto flex items-center gap-2">
                 <DashboardTabs 
                   tabs={[
-                    { id: 'criticos', label: '🚨 Críticos' },
-                    { id: 'nuevos', label: '📥 Inbox' },
-                    { id: 'flota', label: '🚐 Flota' },
-                    { id: 'resueltos', label: '✅ Archivados' },
-                    { id: 'config', label: '⚙️ Settings' },
+                    { id: 'criticos', label: '🚨 Reclamos y Novedades' },
+                    { id: 'nuevos', label: '📥 Bandeja General' },
+                    { id: 'flota', label: '🚐 Mis Socios' },
+                    { id: 'resueltos', label: '✅ Historial' },
+                    { id: 'config', label: '⚙️ Configuración' },
                   ]}
                   currentTab={currentTab}
                   brandColor={brandColor}
@@ -265,14 +280,14 @@ export default async function Dashboard({
 
             {/* Renderizado Condicional */}
             {currentTab === 'config' ? (
-              <SettingsView tenant={tenant} brandColor={brandColor} />
+              <SettingsView tenant={tenant} brandColor={brandColor} units={units || []} />
             ) : currentTab === 'flota' ? (
               <FleetManager units={units || []} tenantId={(tenant as Tenant)?.id} maxUnits={tenant?.max_units} brandColor={brandColor} />
             ) : (
               <div className="space-y-4">
                 {reportsList.length === 0 ? (
                   <div className="vision-card p-20 text-center bg-card border-border/40">
-                     <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-[10px] italic">Queue Empty</p>
+                     <p className="text-muted-foreground/40 font-black uppercase tracking-[0.3em] text-[10px] italic">Bandeja Vacía</p>
                   </div>
                 ) : (
                   reportsList.map((rep) => (
@@ -280,7 +295,7 @@ export default async function Dashboard({
                       <summary className="p-4 md:p-6 flex items-center gap-4 cursor-pointer list-none hover:bg-accent/50 transition-colors select-none text-foreground">
                         
                         <div className="w-12 h-12 shrink-0 vision-pill flex flex-col items-center justify-center text-foreground border-border/40 bg-background/50">
-                          <span className="text-[8px] font-black text-muted-foreground uppercase leading-none mb-0.5">UNIT</span>
+                          <span className="text-[8px] font-black text-muted-foreground uppercase leading-none mb-0.5">SOCIO</span>
                           <span className="text-lg font-black tracking-tighter italic leading-none">{rep.activaqr2_units?.unit_code}</span>
                         </div>
 
@@ -291,7 +306,7 @@ export default async function Dashboard({
                                   rep.type === 'felicitacion' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' : 
                                   'bg-blue-500/20 text-blue-600 dark:text-blue-400 border-blue-500/30'}`}
                               >
-                                {rep.type}
+                                {rep.type === 'queja' ? 'RECLAMO' : rep.type.toUpperCase()}
                               </span>
                               {rep.rating && (
                                 <span className="flex text-yellow-500 text-[10px]">
@@ -299,14 +314,14 @@ export default async function Dashboard({
                                 </span>
                               )}
                               <span className="text-foreground/20 dark:text-white/10 text-xs hidden md:block">|</span>
-                              <span className="text-[10px] font-bold text-foreground/60 dark:text-white/40 uppercase tracking-widest italic leading-none">ID: {rep.ticket_number}</span>
+                              <span className="text-[10px] font-bold text-foreground/60 dark:text-white/40 uppercase tracking-widest italic leading-none">EXP: {rep.ticket_number}</span>
                            </div>
                            <p className="text-sm md:text-base font-bold text-foreground truncate pr-8 tracking-tight">{rep.description}</p>
                         </div>
 
                         <div className="flex items-center gap-4 shrink-0">
                            <div className="hidden sm:flex flex-col items-end">
-                              <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Received</p>
+                              <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest leading-none mb-1">Recibido</p>
                               <p className="text-xs font-black text-foreground italic">{new Date(rep.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                            </div>
                            <div className="p-2 rounded-full group-hover:bg-accent transition-colors">
@@ -322,7 +337,7 @@ export default async function Dashboard({
                            <div className="space-y-8">
                               <div>
                                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                    <FileText className="w-3 h-3 text-brand" /> Content Overview
+                                    <FileText className="w-3 h-3 text-brand" /> RESUMEN DEL CASO
                                  </h4>
                                  <p className="text-base text-foreground bg-accent/50 p-6 rounded-3xl border border-border/40 leading-relaxed font-medium tracking-tight">
                                     {rep.description}
@@ -332,7 +347,7 @@ export default async function Dashboard({
                               {rep.media_url && (
                                  <div>
                                     <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
-                                       <Eye className="w-3 h-3 text-brand" /> Evidence Attachment
+                                       <Eye className="w-3 h-3 text-brand" /> EVIDENCIA DEL PASAJERO
                                     </h4>
                                     <div className="relative group/media overflow-hidden rounded-3xl border border-border/40 shadow-2xl bg-background/50">
                                       <div className="p-3 grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[300px] overflow-y-auto">
@@ -365,7 +380,7 @@ export default async function Dashboard({
                            <div className="flex flex-col gap-6">
                                <div className="vision-card p-6 space-y-6 shadow-md border-border/40 bg-card/60">
                                   <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-                                     <Zap className="w-3 h-3 text-brand" /> Consola de Operaciones
+                                     <Zap className="w-3 h-3 text-brand" /> DATOS DEL SOCIO
                                   </h4>
                                   
                                   <div className="grid grid-cols-2 gap-4">
@@ -374,7 +389,7 @@ export default async function Dashboard({
                                         <p className="text-sm font-black italic text-foreground tracking-tighter">{rep.activaqr2_units?.plate}</p>
                                      </div>
                                      <div className="p-4 bg-background/50 rounded-2xl border border-border/40">
-                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">Propietario</p>
+                                        <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mb-1">TITULAR DE LA UNIDAD</p>
                                         <p className="text-sm font-black italic text-foreground truncate">{rep.activaqr2_units?.activaqr2_tenants?.name}</p>
                                      </div>
                                   </div>
@@ -385,13 +400,14 @@ export default async function Dashboard({
                                         currentStatus={rep.status} 
                                         brandColor={brandColor}
                                      />
-                                    <Link 
-                                      href={`/report/${rep.id}`} 
+                                    <a 
+                                      href={`/api/reports/${rep.id}/pdf`} 
+                                      download={`Expediente_${rep.ticket_number}.pdf`}
                                       target="_blank"
                                       className="vision-pill w-full py-4 bg-accent text-foreground text-center text-[10px] font-black uppercase tracking-widest hover:bg-accent/80 shadow-md border border-border/40 block"
                                     >
-                                      📄 Generar Boleta (PDF)
-                                    </Link>
+                                      📥 Descargar Expediente (PDF)
+                                    </a>
                                  </div>
                               </div>
 
@@ -399,12 +415,12 @@ export default async function Dashboard({
                                  ${rep.is_urgent ? 'bg-red-500/10 border-red-500/20 text-red-400' : 'bg-accent/50 border-border/40 text-muted-foreground'}`}
                               >
                                  <div className="pl-2">
-                                    <p className="text-[8px] font-black uppercase tracking-[0.2em] mb-1 opacity-50">Priority Level</p>
+                                    <p className="text-[8px] font-black uppercase tracking-[0.2em] mb-1 opacity-50">NIVEL DE PRIORIDAD</p>
                                     <p className="text-sm font-black tracking-tight flex items-center gap-3">
                                        {rep.is_urgent ? (
-                                         <><span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span> CRITICAL TASK</>
+                                         <><span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.5)]"></span> URGENTE</>
                                        ) : (
-                                         <><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> STANDARD PENDING</>
+                                         <><span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> EN REVISIÓN</>
                                        )}
                                     </p>
                                  </div>

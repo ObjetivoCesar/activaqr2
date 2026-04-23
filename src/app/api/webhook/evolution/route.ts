@@ -58,6 +58,8 @@ export async function POST(request: Request) {
       let vcardWebsite = '';
       let vcardAddress = '';
       
+      let vcardNoteContent = `Soporte Oficial - Ticket #${ticketId}`;
+      
       try {
         if (tenant.vcard_name?.startsWith('{')) {
           const parsed = JSON.parse(tenant.vcard_name);
@@ -65,6 +67,9 @@ export async function POST(request: Request) {
           vcardTitle = parsed.title ? `\nTITLE:${parsed.title}` : '';
           vcardWebsite = parsed.website ? `\nURL:${parsed.website}` : '';
           vcardAddress = parsed.address ? `\nADR;TYPE=WORK:;;${parsed.address};;;;` : '';
+          
+          if (parsed.description) vcardNoteContent += ` | Desc: ${parsed.description}`;
+          if (parsed.services) vcardNoteContent += ` | Serv: ${parsed.services}`;
         } else if (tenant.vcard_name) {
           vcardName = tenant.vcard_name;
         }
@@ -75,7 +80,7 @@ export async function POST(request: Request) {
       const vcardEmail = tenant.linked_email ? `\nEMAIL;type=WORK:${tenant.linked_email}` : '';
 
       // 4. Generación de vCard Dinámica
-      const vcardString = `BEGIN:VCARD\nVERSION:3.0\nFN:${vcardName}\nORG:${tenant.name}${vcardTitle}${vcardWebsite}${vcardAddress}${vcardPhoto}\nTEL;TYPE=WORK,VOICE;waid=${waNumber}:+${waNumber}${vcardEmail}\nNOTE:Soporte Oficial - Ticket #${ticketId}\nEND:VCARD`;
+      const vcardString = `BEGIN:VCARD\nVERSION:3.0\nFN:${vcardName}\nORG:${tenant.name}${vcardTitle}${vcardWebsite}${vcardAddress}${vcardPhoto}\nTEL;TYPE=WORK,VOICE;waid=${waNumber}:+${waNumber}${vcardEmail}\nNOTE:${vcardNoteContent.replace(/\n/g, ' ')}\nEND:VCARD`;
 
       // 5. Envío de vCard vía Evolution API
       // Usamos el endpoint sendContact que es más "nativo"

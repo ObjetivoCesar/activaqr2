@@ -1,11 +1,13 @@
 import { login } from './actions';
 import { Zap, ShieldCheck, Mail, Lock } from 'lucide-react';
 
-export default function LoginPage({
+export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { error?: string };
+  searchParams: Promise<{ error?: string }>;
 }) {
+  const params = await searchParams;
+  const error = params.error;
   return (
     <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden bg-[#050505] text-white/90 font-sans selection:bg-brand/30">
       
@@ -33,9 +35,9 @@ export default function LoginPage({
           </div>
 
           <form action={login} className="space-y-8 relative z-10">
-            {searchParams?.error && (
+            {error && (
               <div className="p-4 vision-pill bg-red-500/10 border-red-500/20 text-red-400 text-[11px] font-black uppercase tracking-widest mb-8 text-center animate-in shake duration-500">
-                {searchParams.error}
+                {error}
               </div>
             )}
             

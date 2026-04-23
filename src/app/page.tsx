@@ -57,6 +57,7 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
   const [showAttachments, setShowAttachments] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const ratingContainerRef = useRef<HTMLDivElement>(null);
@@ -103,6 +104,8 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
     let vcardWebsite = '';
     let vcardAddress = '';
     
+    let vcardNote = '';
+    
     try {
       if (tenant?.vcard_name?.startsWith('{')) {
         const parsed = JSON.parse(tenant.vcard_name);
@@ -110,6 +113,11 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
         vcardTitle = parsed.title ? `\nTITLE:${parsed.title}` : '';
         vcardWebsite = parsed.website ? `\nURL:${parsed.website}` : '';
         vcardAddress = parsed.address ? `\nADR;TYPE=WORK:;;${parsed.address};;;;` : '';
+        
+        const noteParts = [];
+        if (parsed.description) noteParts.push(`Descripción: ${parsed.description}`);
+        if (parsed.services) noteParts.push(`Servicios: ${parsed.services}`);
+        if (noteParts.length > 0) vcardNote = `\nNOTE:${noteParts.join(' | ').replace(/\n/g, ' ')}`;
       } else if (tenant?.vcard_name) {
         vcardName = tenant.vcard_name;
       }
@@ -123,7 +131,7 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
 VERSION:3.0
 FN:${vcardName}
 ORG:${tenant?.name || 'ActivaQR'}${vcardTitle}${vcardWebsite}${vcardAddress}${vcardPhoto}
-TEL;type=WORK;waid=${whatsapp}:+${whatsapp}${vcardEmail}
+TEL;type=WORK;waid=${whatsapp}:+${whatsapp}${vcardEmail}${vcardNote}
 END:VCARD`;
 
     const blob = new Blob([vcardData], { type: 'text/vcard' });
@@ -350,6 +358,7 @@ END:VCARD`;
       const data = await res.json();
       if (res.ok) {
         setTicket(data.ticket);
+        setGeneratedPdfUrl(data.pdfUrl);
         setUploadProgress(100);
       } else {
         alert("Error: " + (data.error || 'Intenta de nuevo'));
@@ -674,13 +683,27 @@ END:VCARD`;
                     </div>
                     
                     {whatsappNumber && (
-                      <button 
-                        onClick={handleWhatsAppRedirect}
-                        className="bg-foreground text-background py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
-                      >
-                        <Send className="w-4 h-4" />
-                        Solicitar Certificado vía WhatsApp
-                      </button>
+                      <div className="flex flex-col gap-3">
+                        <button 
+                          onClick={handleWhatsAppRedirect}
+                          className="bg-[#25D366] text-white py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                        >
+                          <Send className="w-4 h-4" />
+                          Solicitar Certificado vía WhatsApp
+                        </button>
+                        
+                        {generatedPdfUrl && (
+                          <a 
+                            href={generatedPdfUrl}
+                            download={`Reporte_${ticket}.pdf`}
+                            target="_blank"
+                            className="bg-foreground text-background py-4 rounded-[1.5rem] font-black uppercase tracking-widest text-[11px] shadow-2xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                          >
+                            <FileText className="w-4 h-4" />
+                            Descargar Boleta PDF
+                          </a>
+                        )}
+                      </div>
                     )}
                      <p className="text-[9px] text-muted-foreground/40 font-black uppercase tracking-[0.2em] text-center italic">
                        Sincronización automática de VCard y Ticket
@@ -767,15 +790,15 @@ END:VCARD`;
                  <Loader2 className="w-10 h-10 animate-spin text-foreground" />
               </div>
               <div>
-                <h3 className="text-2xl font-black tracking-tighter text-foreground mb-2 uppercase">Syncing Protocol</h3>
+                <h3 className="text-2xl font-black tracking-tighter text-foreground mb-2 uppercase">Sincronizando Reporte</h3>
                 <p className="text-xs text-muted-foreground font-black uppercase tracking-[0.2em]">
-                   {uploadProgress < 30 ? 'Encoding metadata...' : uploadProgress < 70 ? 'Transmitting evidence...' : 'Finalizing security log...'}
+                   {uploadProgress < 30 ? 'Procesando información...' : uploadProgress < 70 ? 'Transmitiendo evidencia...' : 'Finalizando registro de seguridad...'}
                 </p>
               </div>
               <div className="w-full bg-foreground/5 h-2 rounded-full overflow-hidden border border-foreground/10 p-0.5">
                  <div className="bg-foreground h-full rounded-full transition-all duration-700 shadow-[0_0_20px_rgba(var(--foreground),0.5)]" style={{ width: `${uploadProgress}%` }}></div>
               </div>
-               <p className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground animate-pulse">Establishing Secure Connection</p>
+               <p className="text-[9px] font-black uppercase tracking-[0.5em] text-muted-foreground animate-pulse">Estableciendo Conexión Segura</p>
            </div>
         </div>
       )}

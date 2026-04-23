@@ -1,15 +1,14 @@
-'use client';
+"use client";
 
-import { Printer } from 'lucide-react';
+import * as React from "react";
 
 export default function PrintButton() {
   return (
     <button 
       onClick={() => window.print()}
-      className="flex items-center gap-2 bg-black text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-all shadow-lg"
+      className="bg-black text-white px-8 py-3 rounded-full font-black uppercase tracking-widest text-[10px] hover:scale-105 active:scale-95 transition-all shadow-xl"
     >
-      <Printer size={20} />
-      Imprimir Todo
+      Imprimir / Guardar como PDF
     </button>
   );
 }

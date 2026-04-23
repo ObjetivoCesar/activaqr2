@@ -52,21 +52,23 @@ export async function POST(request: Request) {
       location_lng
     };
 
-    const { error } = await supabase.from('activaqr2_reports').insert(reportPayload);
-
-    if (error) {
-      console.error('Error insertando reporte:', error);
-      return NextResponse.json({ error: 'Fallo al guardar el reporte', details: error }, { status: 500 });
-    }
-
-    // 3. Generar PDF de Reporte
+    // 3. Generar PDF de Reporte ANTES de insertar para guardar la URL
     let pdfUrl = '';
     try {
       const { generateReportPDF } = await import('@/lib/pdf-generator');
       pdfUrl = await generateReportPDF(reportPayload, unit || {}, tenant || {});
     } catch (pdfError) {
       console.error('Error generando PDF:', pdfError);
-      // Continuamos aunque falle el PDF, para no perder la notificación
+    }
+
+    const { error } = await supabase.from('activaqr2_reports').insert({
+      ...reportPayload,
+      metadata: { pdf_url: pdfUrl }
+    });
+
+    if (error) {
+      console.error('Error insertando reporte:', error);
+      return NextResponse.json({ error: 'Fallo al guardar el reporte', details: error }, { status: 500 });
     }
 
     // 4. Notificación Instantánea vía WhatsApp (Multinivel)
@@ -140,7 +142,7 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, ticket: ticketNumber }, { status: 201 });
+    return NextResponse.json({ success: true, ticket: ticketNumber, pdfUrl }, { status: 201 });
   } catch (err) {
     console.error('API Error:', err);
     return NextResponse.json({ error: 'Error del Servidor' }, { status: 500 });

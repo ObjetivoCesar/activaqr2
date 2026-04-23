@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase';
 import type { Report } from '@/lib/types';
 import { MapPin, Clock, Car, User, Ticket } from 'lucide-react';
 import { notFound } from 'next/navigation';
+import PrintButton from '@/components/PrintButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,12 +142,7 @@ export default async function PrintReportPage({ params }: { params: Promise<{ id
              Este documento ha sido generado automáticamente por el sistema ActivaQR. La validez de este informe está sujeta a las grabaciones internas de la unidad y revisiones administrativas.
            </p>
            <div className="no-print">
-              <button 
-                onClick={() => window.print()}
-                className="bg-black text-white px-8 py-3 rounded-full font-black uppercase tracking-widest text-[10px]"
-              >
-                Imprimir / Guardar como PDF
-              </button>
+              <PrintButton />
            </div>
         </div>
       </div>

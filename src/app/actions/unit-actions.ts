@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { Resend } from 'resend';
 import { getSessionTenantId } from '@/lib/dal';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function createUnit(data: any) {
   const { unit_code, plate, owner_name, driver_name, driver_id, notification_number } = data;
@@ -61,7 +61,7 @@ export async function createUnit(data: any) {
   }
 
   try {
-    if (tenant.linked_email) {
+    if (tenant.linked_email && resend) {
       await resend.emails.send({
         from: `ActivaQR <${process.env.RESEND_FROM_EMAIL || 'notificaciones@activaqr.com'}>`,
         to: tenant.linked_email,

@@ -8,6 +8,7 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
       const doc = new PDFDocument({ 
         margin: 50,
         size: 'A4',
+        bufferPages: true,
         info: {
           Title: `Reporte ${reportData.ticket_number}`,
           Author: 'ActivaQR2 System',
@@ -41,22 +42,51 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
         }
       });
 
+      // --- OBTENER LOGO ---
+      let logoBuffer;
+      if (tenantData.logo_url) {
+        try {
+          const response = await fetch(tenantData.logo_url);
+          if (response.ok) {
+            logoBuffer = Buffer.from(await response.arrayBuffer());
+          }
+        } catch (e) {
+          console.error("Error obteniendo logo para PDF:", e);
+        }
+      }
+
       // --- DISEÑO PREMIUM ---
       const brandColor = tenantData.brand_color || '#075E54';
       
       // Header Background
       doc.rect(0, 0, doc.page.width, 120).fill(brandColor);
       
-      // Title
-      doc.fillColor('#FFFFFF')
-         .fontSize(28)
-         .font('Helvetica-Bold')
-         .text((tenantData.name || 'ACTIVAQR').toUpperCase(), 50, 45, { characterSpacing: 2 });
+      // Logo y Título
+      if (logoBuffer) {
+        try {
+          // Ajustar logo a la izquierda
+          doc.image(logoBuffer, 50, 30, { height: 60 });
+          doc.fillColor('#FFFFFF')
+             .fontSize(22)
+             .font('Helvetica-Bold')
+             .text((tenantData.name || 'ACTIVAQR').toUpperCase(), 135, 45, { characterSpacing: 1 });
+        } catch (imgErr) {
+          doc.fillColor('#FFFFFF')
+             .fontSize(28)
+             .font('Helvetica-Bold')
+             .text((tenantData.name || 'ACTIVAQR').toUpperCase(), 50, 45, { characterSpacing: 2 });
+        }
+      } else {
+        doc.fillColor('#FFFFFF')
+           .fontSize(28)
+           .font('Helvetica-Bold')
+           .text((tenantData.name || 'ACTIVAQR').toUpperCase(), 50, 45, { characterSpacing: 2 });
+      }
       
       doc.fontSize(10)
          .font('Helvetica')
          .fillColor('#FFFFFF')
-         .text('SISTEMA INTEGRAL DE GESTION Y SEGURIDAD VIAL', 50, 80, { characterSpacing: 1 });
+         .text('SISTEMA INTEGRAL DE GESTIÓN Y SEGURIDAD VIAL', logoBuffer ? 135 : 50, 80, { characterSpacing: 0.5 });
 
       // Ticket Badge
       doc.rect(400, 40, 150, 40).fill('#FFFFFF');
@@ -86,11 +116,11 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
       currentY += 15;
 
       currentY = drawInfoRow('Tipo de Evento', reportData.type?.toUpperCase(), currentY);
-      currentY = drawInfoRow('Codigo Unidad', unitData.unit_code, currentY);
+      currentY = drawInfoRow('Código Unidad', unitData.unit_code, currentY);
       currentY = drawInfoRow('Placa / ID', unitData.plate, currentY);
       currentY = drawInfoRow('Conductor', unitData.driver_name, currentY);
       if (reportData.rating) {
-        currentY = drawInfoRow('Calificacion', `${reportData.rating} / 5 Estrellas`, currentY);
+        currentY = drawInfoRow('Calificación', `${reportData.rating} / 5 Estrellas`, currentY);
       }
 
       currentY += 15;
@@ -98,9 +128,9 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
       currentY += 15;
 
       // Description
-      doc.fillColor('#999999').fontSize(9).font('Helvetica').text('DESCRIPCION Y DETALLES:', 50, currentY);
+      doc.fillColor('#999999').fontSize(9).font('Helvetica').text('DESCRIPCIÓN Y DETALLES:', 50, currentY);
       currentY += 20;
-      doc.fillColor('#333333').fontSize(11).font('Helvetica').text(reportData.description || 'Sin descripcion detallada.', 50, currentY, { width: 500, lineGap: 5 });
+      doc.fillColor('#333333').fontSize(11).font('Helvetica').text(reportData.description || 'Sin descripción detallada.', 50, currentY, { width: 500, lineGap: 5 });
       
       currentY = doc.y + 40;
 
@@ -116,12 +146,16 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
           const isAudio = trimmedUrl.toLowerCase().includes('audio') || trimmedUrl.toLowerCase().includes('.webm') || trimmedUrl.toLowerCase().includes('.mp3');
           const typeLabel = isVideo ? 'VIDEO' : isAudio ? 'AUDIO' : 'IMAGEN';
 
+          if (currentY > 720) {
+             doc.addPage();
+             currentY = 50;
+          }
+
           doc.rect(50, currentY, 500, 30).fill('#F8F9FA');
           doc.fillColor('#333333').fontSize(10).font('Helvetica-Bold').text(`${typeLabel} - Evidencia #${index + 1}`, 65, currentY + 10);
           doc.fillColor('#0066CC').fontSize(9).font('Helvetica').text('VER ARCHIVO', 430, currentY + 10, { link: trimmedUrl, underline: true });
           
           currentY += 35;
-          if (currentY > 700) { doc.addPage(); currentY = 50; }
         });
       } else {
         doc.fillColor('#999999').fontSize(10).font('Helvetica').text('No se registraron archivos multimedia en este reporte.', 50, currentY);
@@ -130,8 +164,9 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
 
       // Location
       if (reportData.location_lat && reportData.location_lng) {
+        if (currentY > 720) { doc.addPage(); currentY = 50; }
         currentY += 15;
-        doc.fillColor('#333333').fontSize(11).font('Helvetica-Bold').text('UBICACION GEOGRAFICA', 50, currentY);
+        doc.fillColor('#333333').fontSize(11).font('Helvetica-Bold').text('UBICACIÓN GEOGRÁFICA', 50, currentY);
         currentY += 20;
         const mapUrl = `https://www.google.com/maps?q=${reportData.location_lat},${reportData.location_lng}`;
         doc.fillColor('#0066CC').fontSize(10).font('Helvetica').text('Ver punto de origen en Google Maps', 50, currentY, { link: mapUrl, underline: true });
@@ -143,8 +178,8 @@ export async function generateReportPDF(reportData: any, unitData: any, tenantDa
         doc.switchToPage(i);
         const bottom = doc.page.height - 50;
         doc.rect(0, bottom - 10, doc.page.width, 60).fill('#F4F4F4');
-        doc.fillColor('#999999').fontSize(8).font('Helvetica').text('ACTIVAQR2 - TECNOLOGIA PARA LA SEGURIDAD VIAL', 50, bottom + 5, { align: 'left' });
-        doc.text(`Pagina ${i + 1} de ${pages.count}`, 0, bottom + 5, { align: 'right', width: doc.page.width - 50 });
+        doc.fillColor('#999999').fontSize(8).font('Helvetica').text('ACTIVAQR2 - TECNOLOGÍA PARA LA SEGURIDAD VIAL', 50, bottom + 5, { align: 'left' });
+        doc.text(`Página ${i + 1} de ${pages.count}`, 0, bottom + 5, { align: 'right', width: doc.page.width - 50 });
       }
 
       doc.end();
