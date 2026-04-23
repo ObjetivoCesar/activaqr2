@@ -8,11 +8,16 @@ import { revalidatePath } from 'next/cache';
  * Usa el cliente de Supabase con Service Role para asegurar que los cambios se guarden.
  */
 export async function updateTenantAction(id: string, data: any) {
-  console.log('🔄 Iniciando actualización de tenant:', id);
-  console.log('📦 Datos a guardar:', JSON.stringify(data, null, 2));
-
+  console.log('🔄 [SERVER ACTION] Iniciando actualización de tenant:', id);
+  
   if (!id) {
+    console.error('❌ ID de tenant no proporcionado');
     return { success: false, error: 'ID de tenant no proporcionado' };
+  }
+
+  if (!supabase) {
+    console.error('❌ Error Crítico: El cliente de Supabase (Service Role) no está inicializado. Verifique SUPABASE_SERVICE_ROLE_KEY.');
+    return { success: false, error: 'Error de configuración en el servidor (Clave de base de datos faltante)' };
   }
 
   try {
@@ -23,14 +28,20 @@ export async function updateTenantAction(id: string, data: any) {
       .select();
 
     if (error) {
-      console.error('❌ Error en Supabase:', error);
+      console.error('❌ Error de Supabase al actualizar tenant:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('✅ Tenant actualizado correctamente:', updatedData);
+    if (!updatedData || updatedData.length === 0) {
+      console.warn('⚠️ No se encontró el registro para actualizar o no hubo cambios:', id);
+      return { success: false, error: 'No se encontró la empresa o no tienes permisos para editarla.' };
+    }
+
+    console.log('✅ Tenant actualizado correctamente en DB:', updatedData[0].name);
     
-    // Revalidar la ruta del dashboard para que los cambios se reflejen
-    revalidatePath('/dashboard');
+    // Revalidar de forma agresiva para limpiar cualquier caché
+    revalidatePath('/dashboard', 'layout');
+    revalidatePath('/', 'layout');
     
     return { success: true };
   } catch (err: any) {

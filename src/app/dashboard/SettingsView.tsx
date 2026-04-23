@@ -130,10 +130,15 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
       instagram: parsedVcard.instagram || '',
       linkedin: parsedVcard.linkedin || '',
       tiktok: parsedVcard.tiktok || '',
+      twitter: parsedVcard.twitter || '',
+      youtube: parsedVcard.youtube || '',
+      whatsapp_url: parsedVcard.whatsapp_url || '',
       hero_desktop_url: parsedVcard.hero_desktop_url || '',
       hero_mobile_url: parsedVcard.hero_mobile_url || ''
     };
   });
+
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -148,10 +153,10 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
   }, [tenant?.id]);
 
   useEffect(() => {
-    if (!tenant?.id) return;
+    if (!tenant?.id || isSaving) return;
     const draftKey = `activaqr2_settings_draft_${tenant.id}`;
     localStorage.setItem(draftKey, JSON.stringify(formData));
-  }, [formData, tenant?.id]);
+  }, [formData, tenant?.id, isSaving]);
 
   const handleSave = async () => {
     console.log('🔘 Clic en Guardar Cambios');
@@ -184,11 +189,15 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
           instagram: formData.instagram,
           linkedin: formData.linkedin,
           tiktok: formData.tiktok,
+          twitter: formData.twitter,
+          youtube: formData.youtube,
+          whatsapp_url: formData.whatsapp_url,
           hero_desktop_url: formData.hero_desktop_url,
           hero_mobile_url: formData.hero_mobile_url
         })
       };
 
+      setIsSaving(true);
       const result = await updateTenantAction(tenant.id, payload);
 
       if (!result.success) {
@@ -209,6 +218,7 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
       setMessage({ type: 'error', text: 'Error al guardar: ' + (err.message || 'Error desconocido') });
     } finally {
       setLoading(false);
+      setIsSaving(false);
     }
   };
 
