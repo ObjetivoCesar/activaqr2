@@ -57,7 +57,16 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
     vcard = tenant.vcard_name?.startsWith('{') ? JSON.parse(tenant.vcard_name) : { name: tenant.vcard_name || tenant.name };
   } catch { vcard = { name: tenant.name }; }
 
-  const copy = getEnhancedCopy(tenant.name, vcard.description || "");
+  const generatedCopy = getEnhancedCopy(tenant.name, vcard.description || "");
+  const copy = {
+    heroSubtitle: vcard.heroSubtitle || generatedCopy.heroSubtitle,
+    heroTitle:    vcard.heroTitle    || generatedCopy.heroTitle,
+    heroText:     vcard.heroText     || generatedCopy.heroText,
+    aboutTitle:   vcard.aboutTitle   || generatedCopy.aboutTitle,
+    aboutText:    vcard.aboutText    || generatedCopy.aboutText,
+    mission:      vcard.mission      || generatedCopy.mission,
+    vision:       vcard.vision       || generatedCopy.vision,
+  };
 
   const services = Array.isArray(vcard.services) 
     ? vcard.services 
