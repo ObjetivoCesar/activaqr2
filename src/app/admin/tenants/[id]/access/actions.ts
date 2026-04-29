@@ -27,29 +27,32 @@ export async function setTenantAccess(tenantId: string, formData: FormData) {
   // 2. Gestionar en Supabase Auth
   let authUserId: string | null = null;
 
-  // Intentar crear
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-  });
+  // Buscar si el usuario ya existe para evitar el error de "ya registrado"
+  const { data: listData } = await supabase.auth.admin.listUsers();
+  const existingUser = listData?.users.find((u: any) => u.email === email);
 
-  if (authError) {
-    if (authError.message.includes('already registered')) {
-      // Obtener ID para actualizar
-      const { data: listData } = await supabase.auth.admin.listUsers();
-      const foundUser = listData?.users.find((u: any) => u.email === email);
-      
-      if (foundUser) {
-        authUserId = foundUser.id;
-        await supabase.auth.admin.updateUserById(authUserId, { password });
-      } else {
-        throw new Error('No se pudo recuperar el ID del usuario en Auth.');
-      }
-    } else {
-      throw new Error(`Error en Auth: ${authError.message}`);
+  if (existingUser) {
+    // Caso: El usuario ya existe, solo actualizamos su contraseña
+    authUserId = existingUser.id;
+    const { error: updateError } = await supabase.auth.admin.updateUserById(authUserId, { 
+      password,
+      email_confirm: true 
+    });
+    
+    if (updateError) {
+      throw new Error(`Error al actualizar contraseña: ${updateError.message}`);
     }
   } else {
+    // Caso: Usuario nuevo, lo creamos
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+    });
+
+    if (authError) {
+      throw new Error(`Error al crear acceso: ${authError.message}`);
+    }
     authUserId = authData.user.id;
   }
 

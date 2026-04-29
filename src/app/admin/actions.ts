@@ -140,3 +140,26 @@ export async function updateTenant(id: string, formData: FormData) {
 
   revalidatePath('/admin');
 }
+
+export async function generateDemoData(tenantId: string) {
+  const units = [
+    { name: 'Unidad 01', plate: 'PBA-1001', status: 'active' },
+    { name: 'Unidad 05', plate: 'PBA-1005', status: 'standby' },
+    { name: 'Unidad 12', plate: 'PBA-1012', status: 'active' },
+    { name: 'Unidad 20', plate: 'PBA-1020', status: 'maintenance' },
+  ];
+
+  for (const unit of units) {
+    await supabase.from('activaqr2_units').insert({
+      tenant_id: tenantId,
+      name: unit.name,
+      plate: unit.plate,
+      status: unit.status,
+      last_update: new Date().toISOString(),
+    });
+  }
+
+  revalidatePath('/admin');
+  revalidatePath(`/admin/tenants/${tenantId}`);
+}
+

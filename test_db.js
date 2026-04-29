@@ -1,13 +1,16 @@
-require('dotenv').config({path: '.env.local'});
 const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const fs = require('fs');
+const dotenv = require('dotenv');
+
+const envConfig = dotenv.parse(fs.readFileSync('.env.local'));
+const supabase = createClient(envConfig.NEXT_PUBLIC_SUPABASE_URL, envConfig.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
 async function check() {
-  const { data } = await supabase.from('activaqr2_units').select('id, tenant_id').limit(1);
-  if (data && data.length > 0) {
-    console.log(`URL válida: https://activaqr2.vercel.app/?tenantId=${data[0].tenant_id}&unitId=${data[0].id}`);
-  } else {
-    console.log("No hay unidades en la DB");
+  const { data } = await supabase.from('activaqr2_tenants').select('*');
+  const t = data.find(x => x.vcard_name && x.vcard_name.includes('transportes-abelito'));
+  if (t) {
+    console.log(t.name);
+    console.log(JSON.parse(t.vcard_name));
   }
 }
 check();

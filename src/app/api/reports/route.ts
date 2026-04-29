@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { sendWhatsAppMessage, sendWhatsAppDocument } from '@/lib/evolution';
+import { processAudioReport } from '@/lib/ai-audio';
 
 export async function POST(request: Request) {
   try {
@@ -52,7 +53,17 @@ export async function POST(request: Request) {
       location_lng
     };
 
-    // 3. Generar PDF de Reporte ANTES de insertar para guardar la URL
+    // 3. Procesar AI si es audio
+    let aiMetadata = {};
+    if (mediaType === 'audio' && mediaUrl) {
+      try {
+        aiMetadata = await processAudioReport(mediaUrl);
+      } catch (aiErr) {
+        console.error('Error procesando AI:', aiErr);
+      }
+    }
+
+    // 4. Generar PDF de Reporte ANTES de insertar para guardar la URL
     let pdfUrl = '';
     try {
       const { generateReportPDF } = await import('@/lib/pdf-generator');
@@ -63,7 +74,10 @@ export async function POST(request: Request) {
 
     const { error } = await supabase.from('activaqr2_reports').insert({
       ...reportPayload,
-      metadata: { pdf_url: pdfUrl }
+      metadata: { 
+        pdf_url: pdfUrl,
+        ...aiMetadata
+      }
     });
 
     if (error) {
@@ -95,7 +109,15 @@ export async function POST(request: Request) {
       message += `*Chofer:* ${unit?.driver_name || 'No asignado'}\n`;
       message += `*Tipo:* ${typeLabels[type] || type.toUpperCase()}\n`;
       if (rating) message += `*Calificación:* ${'⭐'.repeat(rating)}\n`;
-      message += `*Detalle:* ${content || (mediaType === 'audio' ? 'Mensaje de voz enviado' : 'Sin descripción')}\n\n`;
+      
+      // Incluir transcripción de IA si existe
+      const transcripcion = (aiMetadata as any).transcripcion;
+      if (transcripcion) {
+        message += `\n🎙️ *Transcripción IA:* _"${transcripcion}"_\n`;
+        message += `📊 *Audibilidad:* ${(aiMetadata as any).audibilidad}%\n`;
+      } else {
+        message += `*Detalle:* ${content || (mediaType === 'audio' ? 'Mensaje de voz enviado' : 'Sin descripción')}\n\n`;
+      }
       
       if (location_lat && location_lng) {
         message += `📍 *Ubicación:* https://www.google.com/maps?q=${location_lat},${location_lng}\n`;

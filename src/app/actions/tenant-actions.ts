@@ -49,3 +49,47 @@ export async function updateTenantAction(id: string, data: any) {
     return { success: false, error: err.message || 'Error desconocido en el servidor' };
   }
 }
+
+/**
+ * Envía un mensaje masivo a todas las unidades de un tenant.
+ */
+export async function sendBroadcastMessage(tenantId: string, message: string) {
+  if (!tenantId || !message) {
+    return { success: false, error: 'Faltan parámetros' };
+  }
+
+  const { sendWhatsAppMessage } = await import('@/lib/evolution');
+
+  try {
+    // 1. Obtener todas las unidades con número de notificación
+    const { data: units, error } = await supabase
+      .from('activaqr2_units')
+      .select('notification_number')
+      .eq('tenant_id', tenantId)
+      .not('notification_number', 'is', null);
+
+    if (error) throw error;
+    if (!units || units.length === 0) {
+      return { success: false, error: 'No hay unidades con número de WhatsApp registrado.' };
+    }
+
+    // 2. Extraer números únicos
+    const numbers = [...new Set(units.map(u => u.notification_number).filter(Boolean))];
+
+    // 3. Enviar mensajes (Idealmente en paralelo o con una pequeña cola para evitar bloqueos)
+    const results = await Promise.allSettled(
+      numbers.map(num => sendWhatsAppMessage(num as string, message))
+    );
+
+    const successful = results.filter(r => r.status === 'fulfilled').length;
+    
+    return { 
+      success: true, 
+      count: successful, 
+      total: numbers.length 
+    };
+  } catch (err: any) {
+    console.error('Error in sendBroadcastMessage:', err);
+    return { success: false, error: err.message };
+  }
+}

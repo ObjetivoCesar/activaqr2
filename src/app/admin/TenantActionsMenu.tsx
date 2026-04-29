@@ -1,13 +1,29 @@
 'use client';
 
 import { useState } from 'react';
-import { EllipsisVertical, Save, X } from 'lucide-react';
-import { updateTenant } from './actions';
+import { EllipsisVertical, Save, X, Sparkles } from 'lucide-react';
+import { updateTenant, generateDemoData } from './actions';
 import type { Tenant } from '@/lib/types';
 
 export default function TenantActionsMenu({ tenant }: { tenant: Tenant }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDemoLoading, setIsDemoLoading] = useState(false);
+
+  async function handleMagicDemo() {
+    if (!confirm('¿Generar datos de prueba para esta empresa?')) return;
+    setIsDemoLoading(true);
+    try {
+      await generateDemoData(tenant.id);
+      alert('¡Data mágica generada!');
+      setIsOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert('Error generando data demo');
+    } finally {
+      setIsDemoLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -83,23 +99,36 @@ export default function TenantActionsMenu({ tenant }: { tenant: Tenant }) {
               </form>
             </div>
             
-            <div className="p-6 border-t border-border/40 bg-muted/30 flex justify-end gap-3 shrink-0">
+            <div className="p-6 border-t border-border/40 bg-muted/30 flex justify-between items-center shrink-0">
               <button 
-                type="button" 
-                onClick={() => setIsOpen(false)}
-                className="px-6 py-2.5 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                type="button"
+                onClick={handleMagicDemo}
+                disabled={isDemoLoading}
+                className="flex items-center gap-2 text-primary hover:bg-primary/10 px-4 py-2 rounded-xl font-bold transition-all disabled:opacity-50"
+                title="Generar 5 unidades de prueba instantáneamente"
               >
-                Cancelar
+                <Sparkles size={18} className="animate-pulse" />
+                {isDemoLoading ? 'Generando...' : 'Magic Demo'}
               </button>
-              <button 
-                type="submit" 
-                form={`edit-form-${tenant.id}`}
-                disabled={isSubmitting}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-all active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
-              >
-                <Save size={18} />
-                {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
-              </button>
+              
+              <div className="flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setIsOpen(false)}
+                  className="px-6 py-2.5 rounded-xl font-bold text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit" 
+                  form={`edit-form-${tenant.id}`}
+                  disabled={isSubmitting}
+                  className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-xl font-bold hover:scale-105 transition-all active:scale-95 disabled:opacity-50 disabled:hover:scale-100"
+                >
+                  <Save size={18} />
+                  {isSubmitting ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
             </div>
           </div>
         </div>

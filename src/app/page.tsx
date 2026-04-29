@@ -29,8 +29,10 @@ import {
   BarChart2,
   Calendar,
   Loader2,
-  Star
+  Star,
+  Zap
 } from 'lucide-react';
+import Link from 'next/link';
 
 import { ThemeToggle } from '@/components/ThemeToggle';
 import nextDynamic from 'next/dynamic';
@@ -58,9 +60,11 @@ function PassengerForm({ branding }: { branding: Tenant | null }) {
   const [showCamera, setShowCamera] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [generatedPdfUrl, setGeneratedPdfUrl] = useState<string | null>(null);
+  const [contactName, setContactName] = useState('');
   
   const scrollRef = useRef<HTMLDivElement>(null);
   const ratingContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
@@ -167,12 +171,50 @@ END:VCARD`;
 
   if (!tenantId || !unitId) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-background p-8 text-center gap-4">
-        <div className="w-16 h-16 bg-red-100/10 rounded-full flex items-center justify-center">
-           <X className="text-red-500 w-8 h-8" />
+      <div className="min-h-screen spatial-bg-mesh flex flex-col items-center justify-center p-6 text-center">
+        {/* Decorative elements */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none -z-10">
+          <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-primary/10 blur-[120px] rounded-full animate-pulse" />
+          <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
         </div>
-        <h1 className="text-xl font-bold text-foreground">Acceso no válido</h1>
-        <p className="text-sm text-muted-foreground">Información del vehículo o cliente faltante. Por favor, escanee el código QR de nuevo.</p>
+
+        <div className="vision-window max-w-2xl p-10 md:p-16 shadow-2xl space-y-8 animate-in fade-in zoom-in-95 duration-1000">
+          <div className="flex justify-center">
+            <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center border border-primary/20 shadow-xl shadow-primary/10">
+              <Zap size={40} className="text-primary fill-current" />
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-foreground leading-tight">
+              ActivaQR <span className="text-primary">Pro</span>
+            </h1>
+            <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
+              Gestión inteligente de flotas y seguridad de pasajeros en tiempo real.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+            <Link 
+              href="/login" 
+              className="px-8 py-4 bg-primary text-primary-foreground rounded-2xl font-black uppercase tracking-widest text-xs hover:scale-105 transition-all shadow-xl shadow-primary/20"
+            >
+              Acceso Clientes
+            </Link>
+            <Link 
+              href="/admin" 
+              className="px-8 py-4 bg-foreground/5 text-foreground border border-border/40 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-foreground/10 transition-all"
+            >
+              Super Admin
+            </Link>
+          </div>
+
+          <div className="pt-8 border-t border-border/40">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em] italic">
+              Powered by Grupo Empresarial Reyes
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -347,6 +389,7 @@ END:VCARD`;
           type,
           content,
           rating,
+          contactName: contactName || null,
           mediaUrl,
           mediaType: uploadedUrls.length > 0 ? 'mixed' : null,
           location,
@@ -385,11 +428,25 @@ END:VCARD`;
     if (!whatsappNumber || !ticket) return;
     const message = `Necesito mi ticket de reclamo: ${ticket}`;
     const url = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
-    window.location.href = url;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setContent(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 128) + 'px';
+  };
+
+  const handleStarSelect = (star: number) => {
+    setRating(star);
+    if (star >= 4) setType('felicitacion');
+    else if (star === 3) setType('reporte');
+    else setType('queja');
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-transparent relative overflow-hidden font-sans text-foreground transition-colors duration-500">
+    <div className="flex flex-col min-h-screen bg-transparent relative overflow-hidden font-sans text-foreground transition-colors duration-500 fixed-chat-view">
       
       {showCamera && (
         <CameraCapture 
@@ -446,7 +503,7 @@ END:VCARD`;
       <main className="flex-1 flex flex-col items-center justify-center p-4 pt-28 pb-32 z-10 relative">
         <div 
           ref={scrollRef}
-          className="w-full max-w-lg vision-window p-6 md:p-10 flex flex-col gap-8 shadow-[0_30px_100px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-y-auto h-[75vh] md:h-auto md:max-h-[80vh] scroll-smooth no-scrollbar bg-card/60 backdrop-blur-3xl border border-border/20"
+          className="w-full max-w-lg vision-window p-6 md:p-10 flex flex-col gap-6 md:gap-8 shadow-[0_30px_100px_rgba(0,0,0,0.1)] dark:shadow-[0_30px_100px_rgba(0,0,0,0.5)] overflow-y-auto h-[calc(100dvh-240px)] md:h-auto md:max-h-[75vh] scroll-smooth no-scrollbar bg-card/60 backdrop-blur-3xl border border-border/20"
         >
           {/* Welcome Section */}
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-8 duration-700">
@@ -461,59 +518,60 @@ END:VCARD`;
           </div>
 
           {!type && (
-            <div className="grid grid-cols-1 gap-4 mt-4 animate-in fade-in slide-in-from-bottom-12 duration-1000">
-              {[
-                 { id: 'felicitacion', label: 'Felicitaciones', sub: 'Compartir experiencia positiva', icon: CheckCircle2, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/20' },
-                 { id: 'reporte', label: 'Reporte de Novedad', sub: 'Observación estándar', icon: AlertTriangle, color: 'text-orange-600 dark:text-orange-400', bg: 'bg-orange-500/10 border-orange-500/20' },
-                 { id: 'queja', label: 'Queja o Reclamo', sub: 'Atención a inconvenientes', icon: MessageSquare, color: 'text-red-600 dark:text-red-400', bg: 'bg-red-500/10 border-red-500/20' },
-              ].map((opt) => (
-                <button 
-                  key={opt.id}
-                  onClick={() => setType(opt.id)}
-                  className={`flex items-center gap-6 p-5 rounded-[2rem] border transition-all hover:scale-[1.02] active:scale-95 shadow-xl group ${opt.bg} backdrop-blur-md`}
-                >
-                  <div className={`p-4 vision-pill ${opt.bg} border-white/10 group-hover:scale-110 transition-transform duration-500 shadow-2xl dark:shadow-black/50`}>
-                    <opt.icon className={`w-7 h-7 ${opt.color}`} />
-                  </div>
-                  <div className="flex flex-col items-start">
-                     <span className="text-sm font-black tracking-tight text-foreground uppercase">{opt.label}</span>
-                     <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mt-1 italic">{opt.sub}</span>
-                  </div>
-                </button>
-              ))}
+            <div className="flex flex-col items-center gap-5 mt-2 animate-in fade-in slide-in-from-bottom-12 duration-1000">
+              <p className="text-[11px] font-black uppercase tracking-[0.25em] text-muted-foreground text-center">
+                ¿Cómo calificarías tu experiencia?
+              </p>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => {
+                  const active = hoverRating !== null ? hoverRating : 0;
+                  return (
+                    <button
+                      key={star}
+                      onClick={() => handleStarSelect(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(null)}
+                      className="p-2 transition-all duration-200"
+                    >
+                      <Star
+                        className={`w-12 h-12 transition-all duration-300 ${
+                          active >= star
+                            ? 'fill-current text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)] scale-110'
+                            : 'text-muted-foreground/25 stroke-[1.5px] scale-100'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+              {hoverRating !== null && (
+                <p className="text-sm font-black text-foreground animate-in fade-in duration-200">
+                  {hoverRating === 5 ? '😊 ¡Excelente!' : hoverRating === 4 ? '🙂 Muy bueno' : hoverRating === 3 ? '😐 Regular' : hoverRating === 2 ? '😟 Deficiente' : '😡 Muy malo'}
+                </p>
+              )}
             </div>
           )}
 
           {type && (
-            <div className="space-y-8 animate-in fade-in zoom-in-95 duration-700">
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-700">
               <div className="flex justify-between items-center">
-                  <div 
-                    ref={ratingContainerRef}
-                    className="flex items-center gap-1 group/rating touch-none"
-                    onMouseLeave={() => setHoverRating(null)}
-                    onTouchMove={handleTouchMove}
-                  >
-                     {[1, 2, 3, 4, 5].map((star) => {
-                       const activeRating = hoverRating !== null ? hoverRating : rating;
-                       return (
-                        <button
-                          key={star}
-                          onClick={() => setRating(star)}
-                          onMouseEnter={() => setHoverRating(star)}
-                          className={`p-1.5 transition-all duration-200 ${activeRating >= star ? 'scale-110' : 'scale-100 opacity-100'}`}
-                        >
-                          <Star 
-                            className={`w-7 h-7 ${activeRating >= star ? 'fill-current text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]' : 'text-muted-foreground/40 stroke-[1.5px]'}`} 
-                          />
-                        </button>
-                       );
-                     })}
-                  </div>
-                 <div className="vision-pill px-6 py-4 bg-brand/10 border-brand/20 shadow-2xl shadow-brand/5">
-                    <p className="text-xs font-black uppercase tracking-[0.15em] text-foreground">
-                       Seleccionado: <span className="italic ml-2">{type.toUpperCase()}</span>
-                    </p>
-                 </div>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-5 h-5 ${
+                        rating >= star
+                          ? 'fill-current text-yellow-400'
+                          : 'text-muted-foreground/20'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <div className="vision-pill px-4 py-2 bg-brand/10 border-brand/20">
+                  <p className="text-xs font-black uppercase tracking-[0.15em] text-foreground">
+                    {type === 'felicitacion' ? '✅ Felicitación' : type === 'reporte' ? '⚠️ Novedad' : '🚨 Reclamo'}
+                  </p>
+                </div>
               </div>
 
               {!ticket && (
@@ -712,17 +770,18 @@ END:VCARD`;
               )}
             </>
           )}
+          {!ticket && <div className="h-28 md:h-32 shrink-0" />}
         </div>
       </main>
 
       {!ticket && (
         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-lg px-6 z-50 animate-in slide-in-from-bottom-12 duration-1000">
-          <div className="vision-pill p-2 flex items-center gap-3 shadow-3xl bg-card border-border/40 backdrop-blur-3xl min-h-[64px]">
+          <div className="vision-pill p-1.5 flex items-center gap-2 shadow-3xl bg-card border-border/40 backdrop-blur-3xl min-h-[56px]">
              <button 
-              className="w-12 h-12 vision-pill flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0"
+              className="w-11 h-11 vision-pill flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0 border-none"
               onClick={() => setShowAttachments(!showAttachments)}
             >
-              <Plus className={`${showAttachments ? 'rotate-45 text-brand' : ''} transition-all duration-500 w-6 h-6`} />
+              <Plus className={`${showAttachments ? 'rotate-45 text-brand' : ''} transition-all duration-500 w-5 h-5`} />
             </button>
             <div className="flex-1 relative flex items-center">
               {isRecording ? (
@@ -733,38 +792,40 @@ END:VCARD`;
                 </div>
               ) : (
                 <textarea 
+                  ref={textareaRef}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Describe los detalles del incidente..."
+                  onChange={handleContentChange}
+                  placeholder="Escribe tu mensaje..."
                   rows={1}
-                  className="flex-1 bg-transparent border-none focus:ring-0 text-sm py-3 max-h-32 resize-none placeholder-muted-foreground/40 text-foreground font-medium"
+                  className="flex-1 w-full bg-transparent border-none outline-none focus:outline-none focus:ring-0 ring-0 text-sm py-2 resize-none placeholder-muted-foreground/40 text-foreground font-medium min-h-[40px] max-h-[120px] overflow-y-auto scrollbar-hide shadow-none"
+                  style={{ height: '40px', border: 'none', outline: 'none', boxShadow: 'none', WebkitAppearance: 'none', appearance: 'none' }}
                 />
               )}
             </div>
             {isRecording ? (
               <button 
-                className="w-12 h-12 vision-pill bg-red-500 text-white flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-bounce shrink-0"
+                className="w-11 h-11 vision-pill bg-red-500 text-white flex items-center justify-center shadow-[0_0_20px_rgba(239,68,68,0.4)] animate-bounce shrink-0"
                 onClick={stopRecording}
               >
-                <Mic className="w-6 h-6" />
+                <Mic className="w-5 h-5" />
               </button>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5">
                 <button 
-                  className="w-12 h-12 vision-pill flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0 relative border border-border/10 active:scale-95"
+                  className="w-11 h-11 vision-pill flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0 relative border border-border/10 active:scale-95"
                   onClick={() => startRecording()}
                   title="Grabar Voz"
                 >
-                  <Mic className={audioBlob ? 'text-brand w-5 h-5' : 'w-5 h-5'} />
-                  {audioBlob && <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-brand rounded-full animate-pulse border-2 border-background"></div>}
+                  <Mic className={audioBlob ? 'text-brand w-4.5 h-4.5' : 'w-4.5 h-4.5'} />
+                  {audioBlob && <div className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full animate-pulse border-2 border-background"></div>}
                 </button>
                 <button 
-                  className="w-12 h-12 vision-pill flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0 relative border border-border/10 active:scale-95"
+                  className="w-11 h-11 vision-pill flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-all shrink-0 relative border border-border/10 active:scale-95"
                   onClick={() => setShowCamera(true)}
                   title="Cámara"
                 >
-                  <Camera className={selectedFiles.length > 0 ? 'text-brand w-5 h-5' : 'w-5 h-5'} />
-                  {selectedFiles.length > 0 && <div className="absolute top-2.5 right-2.5 w-2.5 h-2.5 bg-brand rounded-full animate-pulse border-2 border-background"></div>}
+                  <Camera className={selectedFiles.length > 0 ? 'text-brand w-4.5 h-4.5' : 'w-4.5 h-4.5'} />
+                  {selectedFiles.length > 0 && <div className="absolute top-2 right-2 w-2 h-2 bg-brand rounded-full animate-pulse border-2 border-background"></div>}
                 </button>
               </div>
             )}
@@ -772,12 +833,12 @@ END:VCARD`;
             <button 
               disabled={(!content && selectedFiles.length === 0 && !audioBlob) || isSubmitting || isRecording}
               onClick={handleSubmit}
-               className={`w-12 h-12 vision-pill flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-2xl border
+               className={`w-11 h-11 vision-pill flex items-center justify-center transition-all active:scale-95 shrink-0 shadow-2xl border
                 ${(!content && selectedFiles.length === 0 && !audioBlob) || isSubmitting || isRecording 
                   ? 'bg-muted/20 border-border/10 text-muted-foreground/40' 
                   : 'bg-foreground text-background border-foreground hover:scale-110 shadow-[0_0_20px_rgba(var(--foreground),0.2)]'}`}
             >
-              {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className={`w-5 h-5 ml-0.5 ${(!content && selectedFiles.length === 0 && !audioBlob) ? 'opacity-40' : 'opacity-100'}`} />}
+              {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className={`w-4 h-4 ml-0.5 ${(!content && selectedFiles.length === 0 && !audioBlob) ? 'opacity-40' : 'opacity-100'}`} />}
             </button>
           </div>
         </div>

@@ -24,7 +24,10 @@ import {
   Zap,
   MapPin,
   Monitor,
-  Smartphone
+  Smartphone,
+  Video,
+  Trash2,
+  Plus
 } from 'lucide-react';
 import { 
   FacebookIcon, 
@@ -125,7 +128,7 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
       vcard_address: parsedVcard.address || '',
       slug: parsedVcard.slug || '',
       description: parsedVcard.description || '',
-      services: parsedVcard.services || '',
+      services: Array.isArray(parsedVcard.services) ? parsedVcard.services : (parsedVcard.services ? parsedVcard.services.split('\n').filter(Boolean) : []),
       facebook: parsedVcard.facebook || '',
       instagram: parsedVcard.instagram || '',
       linkedin: parsedVcard.linkedin || '',
@@ -134,7 +137,10 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
       youtube: parsedVcard.youtube || '',
       whatsapp_url: parsedVcard.whatsapp_url || '',
       hero_desktop_url: parsedVcard.hero_desktop_url || '',
-      hero_mobile_url: parsedVcard.hero_mobile_url || ''
+      hero_mobile_url: parsedVcard.hero_mobile_url || '',
+      video_url: parsedVcard.video_url || '',
+      about_image_url: parsedVcard.about_image_url || '',
+      google_maps_url: parsedVcard.google_maps_url || ''
     };
   });
 
@@ -184,7 +190,7 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
           address: formData.vcard_address,
           slug: formData.slug,
           description: formData.description,
-          services: formData.services,
+          services: formData.services.filter((s: string) => s.trim() !== ''),
           facebook: formData.facebook,
           instagram: formData.instagram,
           linkedin: formData.linkedin,
@@ -193,7 +199,10 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
           youtube: formData.youtube,
           whatsapp_url: formData.whatsapp_url,
           hero_desktop_url: formData.hero_desktop_url,
-          hero_mobile_url: formData.hero_mobile_url
+          hero_mobile_url: formData.hero_mobile_url,
+          video_url: formData.video_url,
+          about_image_url: formData.about_image_url,
+          google_maps_url: formData.google_maps_url
         })
       };
 
@@ -251,70 +260,96 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
         
         {/* Left Column: Identity & Branding (4 cols) */}
         <div className="xl:col-span-5 space-y-8">
-          <section className="vision-window p-8 bg-card border-border/40 space-y-6">
-            <div className="flex items-center gap-3 mb-4">
+          <section className="vision-window p-8 bg-card border-border/40 space-y-8">
+            <div className="flex items-center gap-3 border-b border-border/20 pb-4 mb-2">
               <Palette className="w-5 h-5 text-brand" />
-              <h4 className="text-xs font-black uppercase tracking-widest text-foreground">IMAGEN DE SU COOPERATIVA</h4>
+              <h4 className="text-xs font-black uppercase tracking-widest text-foreground">IDENTIDAD VISUAL</h4>
             </div>
 
-            <div className="space-y-5">
+            <div className="space-y-8">
+              {/* Nombre de la Empresa */}
               <div className="group">
-                <label className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1 group-focus-within:text-brand transition-colors">NOMBRE DE LA COOPERATIVA</label>
+                <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1 group-focus-within:text-brand transition-colors italic">
+                  NOMBRE DE LA EMPRESA / COOPERATIVA
+                </label>
                 <input 
                   type="text" 
                   value={formData.name}
                   onChange={e => setFormData({...formData, name: e.target.value})}
-                  className="w-full bg-background border border-border/60 p-4 rounded-2xl text-sm font-bold text-foreground focus:border-brand focus:ring-1 focus:ring-brand outline-none transition-all shadow-inner"
+                  placeholder="Ej: Michael Transportes"
+                  className="w-full bg-background/50 border border-border/60 p-5 rounded-2xl text-base font-bold text-foreground focus:border-brand focus:ring-4 focus:ring-brand/10 outline-none transition-all shadow-inner"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Selector de Color Mejorado */}
                 <div className="group">
-                  <label className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">COLOR PRINCIPAL</label>
-                  <div className="flex gap-2">
-                    <input 
-                      type="color" 
-                      value={formData.brand_color}
-                      onChange={e => setFormData({...formData, brand_color: e.target.value})}
-                      className="w-14 h-14 rounded-2xl cursor-pointer bg-background border border-border/60 p-1.5 transition-transform hover:scale-105"
-                    />
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1 italic">
+                    COLOR DE MARCA
+                  </label>
+                  <div className="flex items-center gap-4 bg-background/50 p-3 rounded-3xl border border-border/60">
+                    <div className="relative">
+                      <input 
+                        type="color" 
+                        value={formData.brand_color}
+                        onChange={e => setFormData({...formData, brand_color: e.target.value})}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      />
+                      <div 
+                        className="w-14 h-14 rounded-2xl border-4 border-white shadow-lg transition-transform hover:scale-105"
+                        style={{ backgroundColor: formData.brand_color }}
+                      />
+                    </div>
                     <input 
                       type="text" 
                       value={formData.brand_color}
                       onChange={e => setFormData({...formData, brand_color: e.target.value})}
-                      className="flex-1 bg-background border border-border/60 px-4 rounded-2xl text-xs font-mono font-bold text-foreground focus:border-brand outline-none"
+                      className="flex-1 bg-transparent border-none text-sm font-mono font-bold text-foreground focus:ring-0 outline-none uppercase tracking-widest"
                     />
                   </div>
                 </div>
+
+                {/* Nombre en VCard */}
                 <div className="group">
-                  <label className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">NOMBRE EN TARJETA DIGITAL (VCard)</label>
+                  <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-3 ml-1 italic">
+                    NOMBRE EN TARJETA (VCARD)
+                  </label>
                   <input 
                     type="text" 
                     value={formData.vcard_name}
                     onChange={e => setFormData({...formData, vcard_name: e.target.value})}
-                    placeholder="e.g. ABC Support"
-                    className="w-full bg-background border border-border/60 p-4 rounded-2xl text-sm font-bold text-foreground focus:border-brand outline-none"
+                    placeholder="e.g. Paulo Support"
+                    className="w-full bg-background/50 border border-border/60 p-5 rounded-2xl text-sm font-bold text-foreground focus:border-brand outline-none"
                   />
                 </div>
               </div>
 
+              {/* Logo Upload con Preview Pro */}
               <div className="group">
-                <label className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">LOGO DE SU COOPERATIVA</label>
-                <div className="flex gap-4">
-                  <div className="flex-1">
-                    <input 
-                      type="text" 
-                      value={formData.logo_url}
-                      onChange={e => setFormData({...formData, logo_url: e.target.value})}
-                      className="w-full bg-background border border-border/60 p-4 rounded-2xl text-xs font-bold text-foreground focus:border-brand outline-none truncate"
-                      placeholder="https://..."
-                    />
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('logo-upload')?.click()}
-                    className="w-24 h-24 rounded-2xl flex items-center justify-center shrink-0 bg-background hover:bg-accent transition-all border border-border/60 shadow-lg group-hover:border-brand"
-                  >
+                <label className="block text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-4 ml-1 italic">
+                  LOGO DE LA ORGANIZACIÓN
+                </label>
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  <div className="relative group/logo">
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('logo-upload')?.click()}
+                      className="w-32 h-32 rounded-3xl bg-background border-2 border-dashed border-border/60 flex items-center justify-center overflow-hidden transition-all hover:border-brand/50 hover:bg-brand/5 shadow-xl relative"
+                    >
+                      {formData.logo_url ? (
+                        <img src={formData.logo_url} className="w-full h-full object-contain p-4" alt="Logo preview" />
+                      ) : (
+                        <div className="flex flex-col items-center gap-2">
+                          <ImageIcon className="w-8 h-8 text-muted-foreground/30" />
+                          <span className="text-[8px] font-black text-muted-foreground/50 uppercase tracking-tighter">SIN LOGO</span>
+                        </div>
+                      )}
+                      
+                      <div className="absolute inset-0 bg-brand/80 opacity-0 group-hover/logo:opacity-100 flex items-center justify-center transition-all duration-300">
+                        <Camera className="w-8 h-8 text-white" />
+                      </div>
+                    </button>
+                    
                     <input 
                       id="logo-upload"
                       type="file" 
@@ -325,33 +360,40 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
                         if (!file) return;
                         try {
                           setLoading(true);
-                          
                           const formDataUpload = new FormData();
                           formDataUpload.append('file', file);
                           formDataUpload.append('type', 'logo');
-
-                          const res = await fetch('/api/upload', {
-                            method: 'POST',
-                            body: formDataUpload
-                          });
-
+                          const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload });
                           const result = await res.json();
                           if (!res.ok) throw new Error(result.error || 'Error al subir');
-
                           const dominantColor = await extractDominantColor(file);
                           setFormData({...formData, logo_url: result.url, brand_color: dominantColor});
                         } catch (err: any) {
-                          console.error('Detailed Upload Error:', err);
-                          alert("Error al subir imagen: " + (err.message || "Error desconocido"));
-                        } finally {
-                          setLoading(false);
-                        }
+                          alert("Error: " + err.message);
+                        } finally { setLoading(false); }
                       }}
                     />
-                    {formData.logo_url ? <img src={formData.logo_url} className="w-full h-full object-contain p-2.5" /> : <ImageIcon className="w-6 h-6 text-muted-foreground/30" />}
-                  </button>
+                  </div>
+
+                  <div className="flex-1 space-y-4 w-full">
+                    <div className="relative">
+                      <Globe className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                      <input 
+                        type="text" 
+                        value={formData.logo_url}
+                        onChange={e => setFormData({...formData, logo_url: e.target.value})}
+                        className="w-full bg-background/50 border border-border/60 pl-12 pr-4 py-4 rounded-2xl text-xs font-bold text-foreground focus:border-brand outline-none truncate"
+                        placeholder="URL del logo (https://...)"
+                      />
+                    </div>
+                    <div className="p-4 bg-foreground/[0.02] border border-border/40 rounded-2xl">
+                      <p className="text-[9px] text-muted-foreground font-medium uppercase tracking-widest leading-relaxed">
+                        <AlertCircle className="w-3 h-3 inline mr-1 text-brand" /> 
+                        Se recomienda usar formatos <span className="text-foreground font-black">SVG</span> o <span className="text-foreground font-black">PNG transparente</span> para una visualización óptima en todos los dispositivos.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-[8px] text-muted-foreground mt-3 font-black uppercase tracking-widest opacity-50 ml-1 italic">SVG or PNG recommended for clarity</p>
               </div>
             </div>
           </section>
@@ -421,7 +463,7 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
                     <a href={`/?tenantId=${tenant.id}&unitId=${units?.[0]?.id || ''}`} target="_blank" className="px-3 py-1.5 rounded-full bg-brand/10 text-[9px] font-black text-brand uppercase tracking-widest hover:bg-brand hover:text-white transition-all flex items-center gap-1.5 border border-brand/20">
                       Ver Formulario <Zap className="w-3 h-3" />
                     </a>
-                    <a href={`/p/${formData.slug}`} target="_blank" className="px-3 py-1.5 rounded-full bg-foreground/5 text-[9px] font-black text-foreground uppercase tracking-widest hover:bg-foreground hover:text-background transition-all flex items-center gap-1.5 border border-border/20">
+                    <a href={`/audit/${formData.slug}`} target="_blank" className="px-3 py-1.5 rounded-full bg-foreground/5 text-[9px] font-black text-foreground uppercase tracking-widest hover:bg-foreground hover:text-background transition-all flex items-center gap-1.5 border border-border/20">
                       Página Pública <Globe className="w-3 h-3" />
                     </a>
                   </div>
@@ -433,7 +475,7 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
                   <label className="block text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">ENLACE DE ACCESO</label>
                   <div className="flex items-center gap-3">
                     <div className="px-4 py-4 rounded-2xl bg-background border border-border/60 text-xs font-black text-muted-foreground uppercase tracking-widest">
-                       your-site.com/p/
+                       your-site.com/audit/
                     </div>
                     <input 
                       type="text" 
@@ -462,19 +504,69 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
                       <label className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">
                          <Zap className="w-3 h-3 text-brand" /> SERVICIOS
                       </label>
-                      <textarea 
-                        rows={6}
-                        value={formData.services}
-                        onChange={e => setFormData({...formData, services: e.target.value})}
-                        placeholder="• Transporte Ejecutivo&#10;• Logística 24/7&#10;• Protección VIP"
-                        className="w-full bg-background border border-border/60 p-4 rounded-2xl text-sm font-medium text-foreground focus:border-brand outline-none resize-none leading-relaxed"
-                      />
+                      <div className="space-y-3">
+                        {formData.services.map((svc: string, index: number) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <span className="text-brand shrink-0">•</span>
+                            <input
+                              type="text"
+                              value={svc}
+                              onChange={(e) => {
+                                const newServices = [...formData.services];
+                                newServices[index] = e.target.value;
+                                setFormData({ ...formData, services: newServices });
+                              }}
+                              className="flex-1 bg-background border border-border/60 p-3 rounded-xl text-sm font-medium text-foreground focus:border-brand outline-none"
+                              placeholder="Ej: Transporte Ejecutivo"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const newServices = formData.services.filter((_, i) => i !== index);
+                                setFormData({ ...formData, services: newServices });
+                              }}
+                              className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors shrink-0"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                        {formData.services.length < 8 && (
+                          <button
+                            type="button"
+                            onClick={() => setFormData({ ...formData, services: [...formData.services, ''] })}
+                            className="w-full py-3 rounded-xl border border-dashed border-border/60 text-xs font-bold text-muted-foreground hover:text-brand hover:border-brand/50 hover:bg-brand/5 transition-all flex items-center justify-center gap-2"
+                          >
+                            <Plus className="w-4 h-4" /> Agregar Servicio
+                          </button>
+                        )}
+                      </div>
                    </div>
                 </div>
              </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-border/20">
                 <div className="group">
+                  <label className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">
+                    <Video className="w-3 h-3 text-brand" /> URL VIDEO (YOUTUBE/EMBED)
+                  </label>
+                  <input 
+                    type="text" 
+                    value={formData.video_url}
+                    onChange={e => setFormData({...formData, video_url: e.target.value})}
+                    className="w-full bg-background border border-border/60 p-4 rounded-2xl text-xs font-bold text-foreground focus:border-brand outline-none mb-4"
+                    placeholder="https://www.youtube.com/embed/..."
+                  />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">
+                    <MapPin className="w-3 h-3 text-brand" /> URL GOOGLE MAPS (RESEÑAS)
+                  </label>
+                  <input 
+                    type="text" 
+                    value={formData.google_maps_url}
+                    onChange={e => setFormData({...formData, google_maps_url: e.target.value})}
+                    className="w-full bg-background border border-border/60 p-4 rounded-2xl text-xs font-bold text-foreground focus:border-brand outline-none mb-4"
+                    placeholder="https://goo.gl/maps/..."
+                  />
                   <label className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">
                     <Monitor className="w-3 h-3 text-brand" /> FONDO HERO ESCRITORIO
                   </label>
@@ -553,6 +645,51 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
                             const result = await res.json();
                             if (!res.ok) throw new Error(result.error || 'Error al subir');
                             setFormData({...formData, hero_mobile_url: result.url});
+                          } catch (err: any) {
+                            console.error('Upload Error:', err);
+                            setMessage({ type: 'error', text: 'Error al subir: ' + err.message });
+                          } finally { setLoading(false); }
+                        }}
+                      />
+                      <ImageIcon className="w-5 h-5 text-muted-foreground group-hover:text-brand transition-colors" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="group">
+                  <label className="flex items-center gap-2 text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-2 ml-1">
+                    <ImageIcon className="w-3 h-3 text-brand" /> IMAGEN "SOBRE NOSOTROS"
+                  </label>
+                  <div className="flex gap-4">
+                    <input 
+                      type="text" 
+                      value={formData.about_image_url}
+                      onChange={e => setFormData({...formData, about_image_url: e.target.value})}
+                      className="flex-1 bg-background border border-border/60 p-4 rounded-2xl text-xs font-bold text-foreground focus:border-brand outline-none truncate"
+                      placeholder="https://..."
+                    />
+                    <button
+                      type="button"
+                      onClick={() => document.getElementById('about-image-upload')?.click()}
+                      className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 bg-background hover:bg-accent transition-all border border-border/60 shadow-lg group-hover:border-brand"
+                    >
+                      <input 
+                        id="about-image-upload"
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          try {
+                            setLoading(true);
+                            const formDataUpload = new FormData();
+                            formDataUpload.append('file', file);
+                            formDataUpload.append('type', 'about-image');
+                            const res = await fetch('/api/upload', { method: 'POST', body: formDataUpload });
+                            const result = await res.json();
+                            if (!res.ok) throw new Error(result.error || 'Error al subir');
+                            setFormData({...formData, about_image_url: result.url});
                           } catch (err: any) {
                             console.error('Upload Error:', err);
                             setMessage({ type: 'error', text: 'Error al subir: ' + err.message });

@@ -10,17 +10,26 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-export async function updateReportStatus(reportId: string) {
-  // Primero obtenemos el ticket_number para la notificación
+export async function updateReportStatus(reportId: string, resolutionNote?: string) {
+  // Primero obtenemos el ticket_number y metadata para no perder datos previos
   const { data: reportData } = await supabase
     .from('activaqr2_reports')
-    .select('ticket_number')
+    .select('ticket_number, metadata')
     .eq('id', reportId)
     .single();
 
+  const newMetadata = {
+    ...(reportData?.metadata || {}),
+    resolution_text: resolutionNote || 'Caso gestionado por la central.'
+  };
+
   const { error } = await supabase
     .from('activaqr2_reports')
-    .update({ status: 'Revisado' })
+    .update({ 
+      status: 'Revisado',
+      resolved_at: new Date().toISOString(),
+      metadata: newMetadata
+    })
     .eq('id', reportId);
 
   if (error) {
@@ -30,14 +39,12 @@ export async function updateReportStatus(reportId: string) {
   // Notificar al socio (número de prueba proporcionado)
   if (reportData?.ticket_number) {
     try {
-      const msg = `🔔 *Notificación ActivaQR*\n\nEl reporte *${reportData.ticket_number}* ha sido GESTIONADO por la central.\n\n_Este es un mensaje automático del sistema de vigilancia._`;
+      const msg = `✅ *Caso Resuelto: ${reportData.ticket_number}*\n\nLa administración ha marcado este caso como GESTIONADO.\n\n*Resolución:* _"${resolutionNote || 'Sin observaciones'}"_\n\n_Este es un mensaje automático del sistema de control._`;
       await sendWhatsAppMessage('593963410409', msg);
     } catch (sendErr) {
       console.error('Error enviando notificación WhatsApp:', sendErr);
-      // No lanzamos error para no bloquear la UI si falla Whatsapp
     }
   }
 
-  // Invalida la caché del dashboard para que los datos se refresquen
   revalidatePath('/dashboard');
 }

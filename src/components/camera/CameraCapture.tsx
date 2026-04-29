@@ -165,7 +165,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
           <div className="flex items-center gap-12 animate-in slide-in-from-bottom-8 duration-500">
             <button 
               onClick={handleDiscard}
-              className="w-20 h-20 vision-pill bg-white/5 border border-white/10 text-white flex flex-col items-center justify-center hover:bg-red-500/20 hover:border-red-500/40 transition-all gap-1"
+              className="w-20 h-20 rounded-full bg-white/10 border border-white/20 text-white flex flex-col items-center justify-center hover:bg-red-500/20 hover:border-red-500/40 transition-all gap-1"
             >
               <Trash2 className="w-6 h-6 text-red-500" />
               <span className="text-[8px] font-black uppercase tracking-widest text-red-500">Repetir</span>
@@ -173,10 +173,10 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
             
             <button 
               onClick={handleConfirm}
-              className="w-24 h-24 vision-pill bg-white text-black flex flex-col items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[0_0_50px_rgba(255,255,255,0.3)] gap-1"
+              className="w-24 h-24 rounded-full bg-white text-slate-950 flex flex-col items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[0_0_50px_rgba(255,255,255,0.4)] gap-1"
             >
-              <Check className="w-8 h-8" />
-              <span className="text-[8px] font-black uppercase tracking-widest">Confirmar</span>
+              <Check className="w-8 h-8 text-slate-950" />
+              <span className="text-[8px] font-black uppercase tracking-widest text-slate-950">Confirmar</span>
             </button>
           </div>
         ) : (
@@ -185,13 +185,13 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
             <div className="flex items-center bg-white/5 backdrop-blur-3xl rounded-full p-1.5 border border-white/10">
               <button 
                 onClick={() => setMode('image')}
-                className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${mode === 'image' ? 'bg-white text-black shadow-xl' : 'text-white/40'}`}
+                className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${mode === 'image' ? 'bg-white !text-slate-950 shadow-xl' : '!text-white/40'}`}
               >
                 <Camera className="w-3.5 h-3.5" /> FOTO
               </button>
               <button 
                 onClick={() => setMode('video')}
-                className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${mode === 'video' ? 'bg-white text-black shadow-xl' : 'text-white/40'}`}
+                className={`px-6 py-2.5 rounded-full text-[10px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 ${mode === 'video' ? 'bg-white !text-slate-950 shadow-xl' : '!text-white/40'}`}
               >
                 <Video className="w-3.5 h-3.5" /> VIDEO
               </button>
@@ -220,7 +220,7 @@ export default function CameraCapture({ onCapture, onClose }: CameraCaptureProps
               </button>
             </div>
 
-            <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em] animate-pulse">
+            <p className="text-[9px] font-black !text-white/60 uppercase tracking-[0.3em] animate-pulse">
               Sistema de Captura en Alta Resolución Activo
             </p>
           </>

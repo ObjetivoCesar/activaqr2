@@ -23,10 +23,9 @@ export async function GET(request: Request) {
 
   const tenant = unit.activaqr2_tenants;
   
-  // URL final donde apuntará el QR (El formulario en este mismo proyecto Next.js)
-  const encodedUrl = encodeURIComponent(`https://activaqr2.vercel.app/?tenantId=${tenantId}&unitId=${unitId}`);
-  // Temporary: change encoded URL logic later to handle full URL correctly.
-  const targetUrl = `https://activaqr2.vercel.app/?tenantId=${tenantId}&unitId=${unitId}`;
+  const host = request.headers.get('host') || 'activaqr2.vercel.app';
+  const protocol = host.includes('localhost') ? 'http' : 'https';
+  const targetUrl = `${protocol}://${host}/?tenantId=${tenantId}&unitId=${unitId}`;
 
   try {
     const qrCodeDataUrl = await QRCode.toDataURL(targetUrl, {

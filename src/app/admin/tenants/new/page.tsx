@@ -12,7 +12,7 @@ import Link from 'next/link';
 
 export default function NewTenant() {
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 md:p-10 font-[family-name:var(--font-geist-sans)] spatial-bg-mesh">
+    <div className="min-h-screen bg-background text-foreground p-6 md:p-10 spatial-bg-mesh">
       <div className="max-w-2xl mx-auto">
         {/* Back Link */}
         <Link 

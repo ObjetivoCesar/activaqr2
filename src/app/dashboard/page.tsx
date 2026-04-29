@@ -21,7 +21,11 @@ import {
   Car,
   ChevronDown,
   Settings as SettingsIcon,
-  Megaphone
+  Megaphone,
+  Search,
+  Mic,
+  CheckCircle2,
+  LogOut
 } from 'lucide-react';
 import Link from 'next/link';
 import ReportStatusAction from '@/components/ReportStatusAction';
@@ -31,6 +35,7 @@ import DashboardTabs from './DashboardTabs';
 import SettingsView from './SettingsView';
 import FleetManager from './FleetManager';
 import RealtimeNotificationHandler from './RealtimeNotificationHandler';
+import SearchBar from './SearchBar';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 
@@ -47,12 +52,13 @@ function hexToRgb(hex: string) {
 export default async function Dashboard({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string; page?: string; unitId?: string; tenantId?: string }>;
+  searchParams: Promise<{ tab?: string; page?: string; unitId?: string; tenantId?: string; q?: string }>;
 }) {
   const params = await searchParams;
-  const currentTab = params.tab || 'nuevos';
+  const currentTab = params.tab || 'incidencias';
   const currentPage = parseInt(params.page || '1');
   const selectedUnitId = params.unitId;
+  const searchQuery = params.q || '';
   const itemsPerPage = 10;
   
   const tenantId = await getSessionTenantId();
@@ -83,35 +89,28 @@ export default async function Dashboard({
   let totalItems = 0;
   let totalPages = 0;
 
-  if (currentTab !== 'config') {
-    const status = currentTab === 'resueltos' ? 'Revisado' : 'Nuevo';
+  if (currentTab === 'incidencias' || currentTab === 'resoluciones') {
+    const status = currentTab === 'resoluciones' ? 'Revisado' : 'Nuevo';
 
-    // Ajuste de consulta para incluir Reclamos y Novedades Urgentes
-    let queryOptions: any = {
-      status,
-      unitId: selectedUnitId,
-      page: currentPage,
-      pageSize: itemsPerPage
-    };
+    let query = supabase
+      .from('activaqr2_reports')
+      .select('*, activaqr2_units(unit_code, plate, activaqr2_tenants(name))', { count: 'exact' })
+      .eq('tenant_id', tenantId)
+      .eq('status', status)
+      .order('created_at', { ascending: false });
 
-    if (currentTab === 'criticos') {
-      // Si es la pestaña críticos, traemos quejas o urgentes
-      const { data: reports, count } = await supabase
-        .from('activaqr2_reports')
-        .select('*, activaqr2_units(unit_code)', { count: 'exact' })
-        .eq('tenant_id', tenantId)
-        .eq('status', 'Nuevo')
-        .or(`type.eq.queja,is_urgent.eq.true,rating.lte.2`)
-        .order('created_at', { ascending: false })
-        .range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
-      
-      reportsList = (reports as unknown as Report[]) || [];
-      totalItems = count || 0;
-    } else {
-      const { data: reports, count } = await getReportsByTenant(tenantId, queryOptions);
-      reportsList = (reports as unknown as Report[]) || [];
-      totalItems = count || 0;
+    if (selectedUnitId && selectedUnitId !== 'all') {
+      query = query.eq('unit_id', selectedUnitId);
     }
+
+    if (searchQuery) {
+      query = query.or(`ticket_number.ilike.%${searchQuery}%,description.ilike.%${searchQuery}%`);
+    }
+
+    const { data: reports, count } = await query.range((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage - 1);
+    
+    reportsList = (reports as unknown as Report[]) || [];
+    totalItems = count || 0;
     totalPages = Math.ceil(totalItems / itemsPerPage);
   }
 
@@ -151,6 +150,12 @@ export default async function Dashboard({
           </div>
           
           <div className="flex items-center gap-3">
+            <Link 
+              href={`/dashboard/comunicados`} 
+              className="px-5 py-2 text-[10px] font-black bg-brand text-white rounded-full uppercase tracking-widest border border-brand/20 shadow-lg shadow-brand/20 hover:scale-105 active:scale-95 transition-all"
+            >
+              COMUNICADOS
+            </Link>
             <div className="px-5 py-2 text-[10px] font-black bg-foreground/5 text-foreground rounded-full uppercase tracking-widest border border-border/20 backdrop-blur-sm relative group cursor-pointer">
               <Bell className="w-4 h-4 text-foreground hover:text-brand transition-colors" />
               <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-background animate-pulse"></div>
@@ -161,10 +166,20 @@ export default async function Dashboard({
             >
               Simulador
             </Link>
-            <div className="px-5 py-2 text-[10px] font-black bg-white/10 text-foreground rounded-full uppercase tracking-widest border border-border/40 backdrop-blur-sm">
-              MODO ADMINISTRADOR
-            </div>
             <ThemeToggle />
+            <form action={async () => {
+              'use server';
+              const { logout } = await import('@/app/login/actions');
+              await logout();
+            }}>
+              <button 
+                type="submit"
+                className="p-2 text-muted-foreground hover:text-red-500 transition-colors"
+                title="Cerrar sesión"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </form>
           </div>
         </nav>
         {/* Sonido de Notificación (Oculto) */}
@@ -230,29 +245,6 @@ export default async function Dashboard({
             </div>
           </div>
 
-          {/* Announcements / Public Notice */}
-          <div className="mb-12 p-6 md:p-8 rounded-[2.5rem] bg-white/[0.03] dark:bg-black/[0.2] border border-white/10 dark:border-white/5 shadow-2xl backdrop-blur-3xl relative overflow-hidden group transition-all hover:bg-white/[0.05] dark:hover:bg-black/40">
-            <div className="absolute top-0 right-0 p-8 opacity-[0.03] dark:opacity-[0.05] group-hover:opacity-10 transition-opacity">
-              <Megaphone className="w-32 h-32 rotate-12 text-brand/20 fill-current" />
-            </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="px-3 py-1 rounded-full bg-foreground/5 text-foreground/60 text-[9px] font-black uppercase tracking-[0.2em] border border-foreground/10">AVISO DE LA DIRECTIVA</span>
-              </div>
-              <h3 className="text-2xl md:text-3xl font-black text-foreground tracking-tighter mb-3">
-                Recordatorio: Protocolo de atención al pasajero
-              </h3>
-              <p className="text-muted-foreground/80 text-sm md:text-base max-w-3xl leading-relaxed font-medium">
-                Estimados socios: les recordamos que el trato al pasajero define el nombre de nuestra cooperativa. Cualquier calificación de 3 estrellas o menos generará un reporte automático a gerencia.
-              </p>
-              <div className="mt-6 flex items-center gap-4">
-                 <div className="h-[1px] flex-1 bg-border/40" />
-                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/30 italic">ActivaQR Intelligence Protocol</span>
-              </div>
-            </div>
-          </div>
-
           <div className="space-y-8">
             <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-8 pb-8 border-b border-border/40 mt-8">
               <div className="flex items-center gap-4">
@@ -262,14 +254,14 @@ export default async function Dashboard({
                 </div>
               </div>
               
-              {/* Tabs Responsivos al estilo Vision */}
-              <div className="w-full xl:w-auto flex items-center gap-2">
+              {/* Search & Tabs Responsivos al estilo Vision */}
+              <div className="w-full xl:w-auto flex flex-col md:flex-row items-center gap-4">
+                <SearchBar defaultValue={searchQuery} />
                 <DashboardTabs 
                   tabs={[
-                    { id: 'criticos', label: '🚨 Reclamos y Novedades' },
-                    { id: 'nuevos', label: '📥 Bandeja General' },
+                    { id: 'incidencias', label: '📥 Incidencias' },
+                    { id: 'resoluciones', label: '✅ Resoluciones' },
                     { id: 'flota', label: '🚐 Mis Socios' },
-                    { id: 'resueltos', label: '✅ Historial' },
                     { id: 'config', label: '⚙️ Configuración' },
                   ]}
                   currentTab={currentTab}
@@ -339,9 +331,41 @@ export default async function Dashboard({
                                  <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-4 flex items-center gap-2">
                                     <FileText className="w-3 h-3 text-brand" /> RESUMEN DEL CASO
                                  </h4>
-                                 <p className="text-base text-foreground bg-accent/50 p-6 rounded-3xl border border-border/40 leading-relaxed font-medium tracking-tight">
-                                    {rep.description}
-                                 </p>
+                                  <div className="space-y-4">
+                                     <p className="text-base text-foreground bg-accent/50 p-6 rounded-3xl border border-border/40 leading-relaxed font-medium tracking-tight">
+                                        {rep.description}
+                                     </p>
+                                     {rep.metadata?.transcripcion && (
+                                       <div className="bg-brand/5 border border-brand/20 p-6 rounded-3xl space-y-3">
+                                          <div className="flex items-center justify-between">
+                                             <h5 className="text-[9px] font-black text-brand uppercase tracking-widest flex items-center gap-2">
+                                                <Mic className="w-3 h-3" /> Transcripción IA
+                                             </h5>
+                                             <span className="text-[8px] font-black bg-brand/10 px-2 py-1 rounded-full text-brand">
+                                                CALIDAD: {rep.metadata.audibilidad}%
+                                             </span>
+                                          </div>
+                                          <p className="text-sm font-medium italic text-foreground/80 leading-relaxed">
+                                             "{rep.metadata.transcripcion}"
+                                          </p>
+                                       </div>
+                                     )}
+                                     {rep.status === 'Revisado' && rep.metadata?.resolution_text && (
+                                       <div className="bg-emerald-500/5 border border-emerald-500/20 p-6 rounded-3xl space-y-3">
+                                          <h5 className="text-[9px] font-black text-emerald-500 uppercase tracking-widest flex items-center gap-2">
+                                             <CheckCircle2 className="w-3 h-3" /> Resolución Formal
+                                          </h5>
+                                          <p className="text-sm font-black italic text-emerald-600 dark:text-emerald-400">
+                                             {rep.metadata.resolution_text}
+                                          </p>
+                                          {rep.resolved_at && (
+                                             <p className="text-[8px] font-black text-emerald-500/50 uppercase">
+                                                Cerrado el {new Date(rep.resolved_at).toLocaleString()}
+                                             </p>
+                                          )}
+                                       </div>
+                                     )}
+                                  </div>
                               </div>
 
                               {rep.media_url && (

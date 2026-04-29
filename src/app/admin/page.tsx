@@ -35,7 +35,7 @@ export default async function AdminDashboard() {
     .select('*', { count: 'exact', head: true });
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 md:p-10 font-[family-name:var(--font-geist-sans)] spatial-bg-mesh">
+    <div className="min-h-screen bg-background text-foreground p-6 md:p-10 spatial-bg-mesh">
       {/* Header */}
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
         <div>

@@ -31,57 +31,59 @@
 
 @layer base {
   :root {
-    --background: #f8fafc; /* Slate 50 */
-    --foreground: #020617; /* Slate 950 */
+    --background: #FCF9F5; /* Cream */
+    --foreground: #001549; /* Navy */
     
     --card: rgba(255, 255, 255, 0.7);
-    --card-foreground: #020617;
+    --card-foreground: #001549;
     
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
     
-    --primary: #2563eb;
+    --primary: #f66739; /* Tomate */
     --primary-foreground: #ffffff;
     
-    --secondary: #f1f5f9;
-    --secondary-foreground: #0f172a;
+    --secondary: #001549; /* Navy */
+    --secondary-foreground: #FCF9F5;
     
     --muted: #f1f5f9;
     --muted-foreground: #64748b;
     
-    --accent: #f1f5f9;
-    --accent-foreground: #0f172a;
+    --accent: #f66739;
+    --accent-foreground: #ffffff;
     
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     
-    --border: rgba(0, 0, 0, 0.1);
+    --border: rgba(0, 21, 73, 0.1);
     --input: #e2e8f0;
-    --ring: #2563eb;
+    --ring: #f66739;
     
-    --radius: 0.75rem;
-    --brand-primary: #2563eb;
+    --radius: 1.5rem; /* 24px consistent with ActivaQR1 */
+    --brand-primary: #f66739;
+    --brand-rgb: 246, 103, 57;
+    --primary-rgb: 246, 103, 57;
 
     /* WhatsApp Palettes (Retained for Passenger Form Compatibility) */
-    --wa-header: #075E54;
-    --wa-bg: #e5ddd5;
-    --wa-bubble-user: #dcf8c6;
+    --wa-header: #001549;
+    --wa-bg: #FCF9F5;
+    --wa-bubble-user: #f66739;
     --wa-bubble-system: #ffffff;
-    --wa-text-primary: #111b21;
+    --wa-text-primary: #001549;
   }
  
   .dark {
-    --background: #02040a; /* Obsidian */
-    --foreground: #f8fafc;
+    --background: #001549; /* Deep Navy */
+    --foreground: #FCF9F5;
     
-    --card: rgba(15, 15, 20, 0.4);
-    --card-foreground: #f8fafc;
+    --card: rgba(0, 21, 73, 0.4);
+    --card-foreground: #FCF9F5;
     
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
     
-    --primary: #3b82f6;
-    --primary-foreground: #02040a;
+    --primary: #f66739;
+    --primary-foreground: #001549;
     
     --secondary: #1e293b;
     --secondary-foreground: #f8fafc;
@@ -89,33 +91,51 @@
     --muted: #1e293b;
     --muted-foreground: #94a3b8;
     
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
+    --accent: #f66739;
+    --accent-foreground: #FCF9F5;
     
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     
     --border: rgba(255, 255, 255, 0.1);
     --input: #1e293b;
-    --ring: #3b82f6;
+    --ring: #f66739;
 
-    --brand-primary: #60a5fa;
+    --brand-primary: #f66739;
+    --brand-rgb: 246, 103, 57;
+    --primary-rgb: 246, 103, 57;
 
-    --wa-bubble-user: #056162;
-    --wa-bubble-system: #262d31;
-    --wa-text-primary: #e9edef;
+    --wa-bubble-user: #f66739;
+    --wa-bubble-system: #001549;
+    --wa-text-primary: #FCF9F5;
   }
 }
 
 @layer base {
+  html, body {
+    overflow-x: hidden;
+    overflow-y: auto;
+    min-height: 100dvh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+  }
   * {
     border-color: var(--border);
   }
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+    font-family: var(--font-montserrat), var(--font-inter), Arial, sans-serif;
   }
+}
+
+/* Modo Chat Fijo (Solo para interfaz de pasajero en móvil) */
+.fixed-chat-view {
+  overflow: hidden !important;
+  height: 100dvh !important;
+  position: fixed;
+  width: 100vw;
 }
 
 @layer utilities {
@@ -169,7 +189,7 @@
   }
 
   .vision-pill {
-    background: rgba(var(--primary), 0.1);
+    background: rgba(var(--primary-rgb), 0.1);
     backdrop-filter: blur(25px) saturate(160%);
     border: 1px solid var(--border);
     border-radius: 9999px;
