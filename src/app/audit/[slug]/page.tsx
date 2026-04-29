@@ -142,6 +142,8 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
           color: rgba(255,255,255,0.6);
         }
         .social-circle:hover { border-color: ${brand}; color: ${brand}; transform: translateY(-3px); }
+        .whatsapp-btn { background-color: #25D366; color: white; transition: all 0.3s ease; }
+        .whatsapp-btn:hover { background-color: #22c35e; transform: translateY(-2px); shadow: 0 10px 20px rgba(37, 211, 102, 0.3); }
         .feature-card {
           padding: 40px;
           border-radius: 20px;
@@ -179,7 +181,8 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
 
       {/* --- HERO SECTION --- */}
       <section className="relative min-h-screen flex items-center overflow-hidden">
-        <div className="absolute inset-0 hero-bg bg-cover bg-center transition-all duration-1000" />
+        <div className="absolute inset-0 hero-bg bg-cover bg-center transition-all duration-1000" style={{ backgroundImage: `url('${heroDesktop}')` }} />
+        <div className="absolute inset-0 bg-slate-900/70" />
         <div className="absolute inset-0 hero-gradient" />
         
         <div className="relative z-10 container mx-auto px-6 md:px-12 pt-20">
@@ -197,7 +200,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
               {copy.heroText}
             </p>
             <div className="flex flex-wrap gap-4 pt-6">
-              <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="brand-btn px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3">
+              <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="whatsapp-btn px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3">
                 <MessageSquare size={18} /> Contactar Ahora
               </Link>
               <Link href="#servicios" className="brand-outline px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3">
@@ -524,7 +527,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="section-dark pt-16 pb-12">
+      <footer className="section-dark pt-12 pb-8">
         <div className="container mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-20 pb-12 border-b border-white/5">
             <div className="space-y-8">
@@ -570,7 +573,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
 
-          <div className="pt-12 flex flex-col items-center gap-6 mt-12">
+          <div className="pt-8 flex flex-col items-center gap-4 mt-8 opacity-50">
             <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest text-center">
               Diseñado por <Link href="https://www.cesarreyesjaramillo.com/" target="_blank" className="text-white hover:brand-text transition-colors">César Reyes</Link>
             </p>
