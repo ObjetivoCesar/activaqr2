@@ -36,6 +36,7 @@ export default function LandingClient({
   }, []);
 
   const heroDesktop = vcard.hero_desktop_url || 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop';
+  const aboutImg = vcard.about_image_url || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop';
 
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
@@ -64,6 +65,11 @@ export default function LandingClient({
         fontFamily: "'Inter', system-ui, sans-serif" 
       } as React.CSSProperties}
     >
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+
       {/* --- NAVBAR --- */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 h-20 px-6 md:px-12 flex items-center justify-between transition-all duration-300 backdrop-blur-md ${
@@ -82,13 +88,13 @@ export default function LandingClient({
         </div>
         <div className="hidden md:flex items-center gap-8">
           <Link href="#servicios" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Servicios</Link>
-          <Link href="#video" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Corporativo</Link>
           <Link href="#unidades" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Flota</Link>
+          <Link href="#contacto" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Contacto</Link>
         </div>
         <Link 
           href={`https://wa.me/${tenant.whatsapp_number}`} 
           target="_blank" 
-          className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
+          className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105"
           style={{ backgroundColor: brand, color: brandContrast }}
         >
           Soporte 24/7
@@ -98,7 +104,6 @@ export default function LandingClient({
       {/* --- HERO SECTION --- */}
       <section className="relative min-h-screen flex items-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 bg-cover bg-right md:bg-center transition-all duration-1000" style={{ backgroundImage: `url('${heroDesktop}')` }} />
-        {/* REFINED GRADIENT: Dark left, Fade to Transparent Right */}
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent md:from-slate-950 md:via-slate-950/60" />
         
         <div className="relative z-10 container mx-auto px-6 md:px-12 pt-20">
@@ -123,12 +128,8 @@ export default function LandingClient({
               >
                 <MessageSquare size={18} /> Contactar Ahora
               </Link>
-              <Link 
-                href="#servicios" 
-                className="px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all hover:bg-white/10 border-2"
-                style={{ borderColor: brand, color: brand }}
-              >
-                Explorar Servicios <ChevronRight size={18} />
+              <Link href="#servicios" className="px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all hover:bg-white/10 border-2" style={{ borderColor: brand, color: brand }}>
+                Explorar <ChevronRight size={18} />
               </Link>
             </div>
           </div>
@@ -149,55 +150,167 @@ export default function LandingClient({
         </div>
       </section>
 
-      {/* --- Rest of content using internal Icon mapping --- */}
-      <section className="py-24 bg-slate-50">
-        <div className="container mx-auto px-6 md:px-12 text-center">
-           <h2 className="text-2xl font-black uppercase tracking-widest mb-12">Nuestra Propuesta de Valor</h2>
-           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {[
-                { icon: Shield, t: "Seguridad Certificada", d: "Protocolos internacionales de protección." },
-                { icon: Clock, t: "Puntualidad Absoluta", d: "Gestión de tiempos optimizada por IA." },
-                { icon: Zap, t: "Tecnología Real-Time", d: "Rastreo y control total desde su móvil." }
-              ].map((f, i) => (
-                <div key={i} className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all">
-                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: `${brand}15`, color: brand }}>
-                      <f.icon size={24} />
-                   </div>
-                   <h3 className="font-black uppercase mb-4 text-sm">{f.t}</h3>
-                   <p className="text-xs text-slate-500 leading-relaxed">{f.d}</p>
+      {/* --- ABOUT SECTION --- */}
+      <section className="py-24 md:py-32">
+        <div className="container mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+            <div className="space-y-8">
+              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Trayectoria y Confianza</p>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]">{copy.aboutTitle}</h2>
+              <p className="text-slate-600 text-lg leading-relaxed">{copy.aboutText}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2" style={{ color: brand }}><CheckCircle2 size={20} /> <span className="text-xs font-black uppercase text-slate-900">Misión</span></div>
+                  <p className="text-sm text-slate-500">{copy.mission}</p>
                 </div>
-              ))}
-           </div>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2" style={{ color: brand }}><CheckCircle2 size={20} /> <span className="text-xs font-black uppercase text-slate-900">Visión</span></div>
+                  <p className="text-sm text-slate-500">{copy.vision}</p>
+                </div>
+              </div>
+              <Link href={vcardUrl} download className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest inline-flex items-center gap-3 transition-all" style={{ backgroundColor: brand, color: brandContrast }}>
+                <Download size={18} /> Descargar Tarjeta Digital
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4 rounded-[40px] rotate-3 opacity-10" style={{ backgroundColor: brand }} />
+              <img src={aboutImg} alt="About" className="relative rounded-[40px] w-full aspect-[4/5] object-cover shadow-2xl" />
+            </div>
+          </div>
         </div>
       </section>
 
-      {/* --- VIDEO --- */}
+      {/* --- SERVICES GRID --- */}
+      <section id="servicios" className="py-24 md:py-32 bg-slate-50">
+        <div className="container mx-auto px-6 md:px-12">
+          <div className="mb-16 space-y-4 text-center md:text-left">
+            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Portafolio</p>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]">Servicios Especializados</h2>
+          </div>
+          <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 pb-8 snap-x snap-mandatory hide-scrollbar">
+            {services.map((svc: string, i: number) => {
+              const imgs = [
+                 'https://images.unsplash.com/photo-1519003722824-194d4455a60c',
+                 'https://images.unsplash.com/photo-1601584115197-04ecc0da31d7',
+                 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d',
+                 'https://images.unsplash.com/photo-1504856637682-1e96a40a5a67'
+              ];
+              const bgImg = imgs[i % imgs.length];
+              return (
+                <div key={i} className="min-w-[85vw] md:min-w-0 snap-center shrink-0 relative h-[450px] rounded-[32px] overflow-hidden group">
+                  <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url('${bgImg}?q=80&w=600&auto=format&fit=crop')` }} />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+                  <div className="absolute inset-0 p-8 flex flex-col justify-end z-10">
+                    <h4 className="text-xl font-black uppercase tracking-tight mb-4 text-white">{svc.replace('• ', '')}</h4>
+                    <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="w-full py-4 rounded-xl bg-white text-black text-center font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">
+                      Cotizar Ahora
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* --- VIDEO SECTION --- */}
       {vcard.video_url && (
-        <section id="video" className="bg-slate-900 py-24 text-white">
-           <div className="container mx-auto px-6">
-              <div className="max-w-4xl mx-auto rounded-[40px] overflow-hidden border border-white/10 shadow-2xl">
-                 <iframe src={getEmbedUrl(vcard.video_url)} className="w-full aspect-video" allowFullScreen />
-              </div>
-           </div>
+        <section id="video" className="bg-slate-900 py-24 text-white overflow-hidden">
+          <div className="container mx-auto px-6 text-center space-y-16">
+            <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">Operación <span className="text-white/30 italic">en Vivo</span></h2>
+            <div className="max-w-5xl mx-auto rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
+              <iframe src={getEmbedUrl(vcard.video_url)} className="w-full aspect-video" allowFullScreen />
+            </div>
+          </div>
         </section>
       )}
 
-      {/* --- FOOTER CLEAN --- */}
-      <footer className="bg-slate-950 py-12 text-white border-t border-white/5">
-        <div className="container mx-auto px-6 text-center space-y-8">
-           <div className="flex justify-center gap-4">
+      {/* --- FLEET DIRECTORY --- */}
+      <section id="unidades" className="py-24 md:py-32 bg-white">
+        <div className="container mx-auto px-6 md:px-12">
+          <div className="mb-16">
+            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Directorio de Flota</p>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase">Estado de Unidades</h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {(units || []).slice(0, 10).map((unit: any) => (
+              <div key={unit.id} className="bg-slate-50 border border-slate-100 p-6 rounded-[24px] hover:border-brand/30 transition-all group">
+                <div className="flex items-center justify-between mb-8">
+                  <Car size={24} className="text-slate-300 group-hover:text-brand" style={{ color: scrolled ? 'inherit' : '' }} />
+                  <span className="text-[10px] font-black uppercase px-2 py-1 bg-green-500/10 text-green-600 rounded-md">Activa</span>
+                </div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Unidad</p>
+                <p className="text-3xl font-black text-slate-900">{unit.unit_code}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- GOOGLE REVIEWS --- */}
+      <section className="py-24 md:py-32 bg-slate-50">
+        <div className="container mx-auto px-6 text-center space-y-10">
+          <div className="flex justify-center gap-1">
+            {[...Array(5)].map((_, i) => <Star key={i} size={24} fill={brand} style={{ color: brand }} />)}
+          </div>
+          <p className="text-8xl md:text-[140px] font-black tracking-tighter leading-none" style={{ color: brand }}>5.0</p>
+          <h3 className="text-2xl font-black uppercase">Excelencia Validada</h3>
+          <div className="flex overflow-x-auto gap-8 snap-x hide-scrollbar py-10 max-w-4xl mx-auto text-left">
+            {[
+              { n: "Roberto García", t: "El mejor servicio de la ciudad. Puntualidad impecable." },
+              { n: "Lucía Méndez", t: "Unidades muy limpias y conductores profesionales." }
+            ].map((r, i) => (
+              <div key={i} className="min-w-[80vw] md:min-w-[400px] snap-center p-8 rounded-3xl bg-white border border-slate-100 shadow-sm">
+                <p className="text-sm italic text-slate-600 mb-6">"{r.t}"</p>
+                <p className="text-xs font-black uppercase text-slate-900">{r.n}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* --- CONTACT & MAP --- */}
+      <section id="contacto" className="py-24 md:py-32 bg-white">
+        <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
+          <div className="space-y-10">
+            <div className="space-y-4">
+              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Contacto</p>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]">Ubícanos y Conecta</h2>
+            </div>
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                <MapPin size={24} style={{ color: brand }} />
+                <div><p className="text-[10px] font-black uppercase text-slate-400">Dirección</p><p className="text-sm font-bold">{vcard.address || 'Sede Central'}</p></div>
+              </div>
+              <div className="flex items-center gap-4 p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                <Phone size={24} style={{ color: brand }} />
+                <div><p className="text-[10px] font-black uppercase text-slate-400">WhatsApp</p><p className="text-sm font-bold">+{tenant.whatsapp_number}</p></div>
+              </div>
+            </div>
+            <div className="flex gap-4">
               {socialLinks.map(s => {
                 const Icon = IconMap[s.id] || Globe;
                 return (
-                  <Link key={s.id} href={s.url} target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
-                    <Icon size={18} />
+                  <Link key={s.id} href={s.url} target="_blank" className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center hover:scale-110 transition-all" style={{ color: brand }}>
+                    <Icon size={28} />
                   </Link>
                 );
               })}
-           </div>
-           <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">
-              © {new Date().getFullYear()} {tenant.name} | ActivaQR Ecosystem
-           </p>
+            </div>
+          </div>
+          <div className="aspect-square bg-slate-900 rounded-[40px] overflow-hidden relative group">
+             <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop')] bg-cover opacity-40 transition-transform duration-1000 group-hover:scale-110" />
+             <div className="absolute inset-0 flex items-center justify-center">
+                <Link href={vcard.google_maps_url || '#'} target="_blank" className="px-8 py-4 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Abrir Mapa</Link>
+             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-slate-950 py-12 text-white/50 text-center border-t border-white/5">
+        <div className="container mx-auto px-6 space-y-8">
+           <p className="text-[10px] font-black uppercase tracking-[0.4em]">© {new Date().getFullYear()} {tenant.name} | ActivaQR Ecosystem</p>
         </div>
       </footer>
     </div>
