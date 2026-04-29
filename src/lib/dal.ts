@@ -78,22 +78,10 @@ export async function getTenantConfig(tenantId: string) {
  * Obtiene un tenant por su slug (buscando dentro del JSON de vcard_name).
  */
 export async function getTenantBySlug(slug: string) {
-  const { data: tenants, error } = await supabase
+  return await supabase
     .from('activaqr2_tenants')
-    .select('*');
-
-  if (error || !tenants) return { data: null, error };
-
-  const tenant = tenants.find((t: any) => {
-    try {
-      if (t.vcard_name?.startsWith('{')) {
-        const parsed = JSON.parse(t.vcard_name);
-        return parsed.slug === slug;
-      }
-    } catch(e) {}
-    return false;
-  });
-
-  return { data: tenant || null, error: null };
+    .select('*')
+    .eq('slug', slug)
+    .single();
 }
 
