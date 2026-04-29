@@ -5,13 +5,12 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-async function createProTemplate() {
+async function restoreProTemplate() {
   const slug = 'nexus-logistics';
   const email = 'ceo@nexus-logistics.com';
   
-  console.log(`Verificando existencia de: ${slug}...`);
+  console.log(`Restaurando a: ${slug}...`);
 
-  // 1. Buscar si ya existe
   const { data: existing } = await supabaseAdmin
     .from('activaqr2_tenants')
     .select('id')
@@ -20,42 +19,40 @@ async function createProTemplate() {
 
   const vcard_name = JSON.stringify({
     name: "Nexus Global Logistics",
-    title: "Soporte Premium 24/7",
+    title: "Logística y Seguridad de Clase Mundial",
     website: "https://nexus-logistics.com",
-    address: "World Trade Center, Torre A, Quito",
+    address: "Av. de los Granados y 10 de Agosto, Quito - Ecuador",
     slug: slug,
-    description: "Líderes en transporte corporativo y logística inteligente. Nuestra flota cuenta con tecnología de punta y monitoreo satelital constante para garantizar su seguridad y puntualidad.",
+    description: "Con más de 15 años de experiencia, somos el socio estratégico líder en transporte pesado y logística integral en todo el territorio ecuatoriano. Seguridad, puntualidad y tecnología en cada kilómetro.",
     services: [
-      "Transporte Ejecutivo VIP",
-      "Logística de Carga Crítica",
-      "Monitoreo IA en Tiempo Real",
-      "Seguro de Pasajero Premium"
+      "Transporte de Carga Pesada",
+      "Logística de Distribución Nacional",
+      "Monitoreo Satelital 24/7",
+      "Gestión de Inventarios Pro"
     ],
     hero_desktop_url: "https://images.unsplash.com/photo-1519003722824-194d4455a60c?auto=format&fit=crop&q=80&w=2000",
     hero_mobile_url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&q=80&w=1000",
-    video_url: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    about_image_url: "https://images.unsplash.com/photo-1580674285054-bed31e145f59?auto=format&fit=crop&q=80&w=1000",
+    video_url: "https://www.youtube.com/embed/WfGRXvIRxMY",
+    about_image_url: "https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?auto=format&fit=crop&q=80&w=1000",
     google_maps_url: "https://goo.gl/maps/xyz"
   });
 
   const tenantData = {
     name: "Nexus Global Logistics",
     linked_email: email,
-    brand_color: "#001549",
+    brand_color: "#001e3c",
     logo_url: "https://www.activaqr.com/_next/image?url=%2Fimages%2Flogo_header.png&w=256&q=75",
     vcard_name: vcard_name,
     subscription_status: 'active'
   };
 
   if (existing) {
-    console.log('Actualizando tenant existente...');
     await supabaseAdmin.from('activaqr2_tenants').update(tenantData).eq('id', existing.id);
   } else {
-    console.log('Insertando nuevo tenant...');
     await supabaseAdmin.from('activaqr2_tenants').insert(tenantData);
   }
 
-  console.log('✅ ¡Nexus Logistics sincronizado en la Base de Datos!');
+  console.log('✅ ¡Nexus Global Logistics restaurado!');
 }
 
-createProTemplate();
+restoreProTemplate();

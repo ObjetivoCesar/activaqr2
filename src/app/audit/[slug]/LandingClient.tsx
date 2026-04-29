@@ -18,12 +18,12 @@ interface LandingClientProps {
   brandContrast: string;
   vcard: any;
   services: string[];
-  socials: any[];
+  socialLinks: { id: string, url: string, label: string }[];
   vcardUrl: string;
 }
 
 export default function LandingClient({ 
-  tenant, units, copy, brand, brandRgb, brandContrast, vcard, services, socials, vcardUrl 
+  tenant, units, copy, brand, brandRgb, brandContrast, vcard, services, socialLinks, vcardUrl 
 }: LandingClientProps) {
   const [scrolled, setScrolled] = useState(false);
 
@@ -36,7 +36,6 @@ export default function LandingClient({
   }, []);
 
   const heroDesktop = vcard.hero_desktop_url || 'https://images.unsplash.com/photo-1519003722824-194d4455a60c?q=80&w=2075&auto=format&fit=crop';
-  const aboutImg = vcard.about_image_url || 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?q=80&w=2070&auto=format&fit=crop';
 
   const getEmbedUrl = (url: string) => {
     if (!url) return '';
@@ -48,24 +47,29 @@ export default function LandingClient({
     return url;
   };
 
-  // Variables CSS dinámicas para evitar etiquetas <style>
-  const brandStyles = {
-    '--brand-color': brand,
-    '--brand-rgb': brandRgb,
-    '--brand-contrast': brandContrast,
-  } as React.CSSProperties;
+  const IconMap: Record<string, any> = {
+    instagram: InstagramIcon,
+    whatsapp: WhatsappIcon,
+    facebook: FacebookIcon,
+    tiktok: TiktokIcon
+  };
 
   return (
     <div 
       className="h-full w-full overflow-y-auto overflow-x-hidden scroll-smooth bg-white" 
-      style={{ ...brandStyles, fontFamily: "'Inter', system-ui, sans-serif" }}
+      style={{ 
+        '--brand-color': brand,
+        '--brand-rgb': brandRgb,
+        '--brand-contrast': brandContrast,
+        fontFamily: "'Inter', system-ui, sans-serif" 
+      } as React.CSSProperties}
     >
       {/* --- NAVBAR --- */}
       <nav 
-        className={`fixed top-0 left-0 right-0 z-50 h-20 px-6 md:px-12 flex items-center justify-between transition-all duration-400 backdrop-blur-md ${
-          scrolled ? 'bg-slate-900/90 border-b-2' : 'bg-slate-800/40 border-b border-white/10'
+        className={`fixed top-0 left-0 right-0 z-50 h-20 px-6 md:px-12 flex items-center justify-between transition-all duration-300 backdrop-blur-md ${
+          scrolled ? 'bg-slate-900/95 border-b-2 shadow-xl' : 'bg-slate-800/20 border-b border-white/5'
         }`}
-        style={{ borderBottomColor: scrolled ? brand : 'rgba(255,255,255,0.1)' }}
+        style={{ borderBottomColor: scrolled ? brand : 'rgba(255,255,255,0.05)' }}
       >
         <div className="flex items-center gap-4">
           {tenant.logo_url ? (
@@ -84,7 +88,7 @@ export default function LandingClient({
         <Link 
           href={`https://wa.me/${tenant.whatsapp_number}`} 
           target="_blank" 
-          className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all"
+          className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95"
           style={{ backgroundColor: brand, color: brandContrast }}
         >
           Soporte 24/7
@@ -94,8 +98,8 @@ export default function LandingClient({
       {/* --- HERO SECTION --- */}
       <section className="relative min-h-screen flex items-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 bg-cover bg-right md:bg-center transition-all duration-1000" style={{ backgroundImage: `url('${heroDesktop}')` }} />
-        {/* Lateral Gradient (Fade from Left to Right) */}
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/60 to-transparent md:from-slate-950 md:via-slate-950/40" />
+        {/* REFINED GRADIENT: Dark left, Fade to Transparent Right */}
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent md:from-slate-950 md:via-slate-950/60" />
         
         <div className="relative z-10 container mx-auto px-6 md:px-12 pt-20">
           <div className="max-w-3xl space-y-6">
@@ -115,14 +119,14 @@ export default function LandingClient({
               <Link 
                 href={`https://wa.me/${tenant.whatsapp_number}`} 
                 target="_blank" 
-                className="bg-[#25D366] hover:bg-[#22c35e] px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 text-white transition-all hover:-translate-y-1 shadow-lg shadow-green-500/20"
+                className="bg-[#25D366] hover:bg-[#22c35e] px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 text-white transition-all hover:-translate-y-1 shadow-lg shadow-green-500/30"
               >
                 <MessageSquare size={18} /> Contactar Ahora
               </Link>
               <Link 
                 href="#servicios" 
-                className="px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all hover:bg-white/10"
-                style={{ border: `2px solid ${brand}`, color: brand }}
+                className="px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 transition-all hover:bg-white/10 border-2"
+                style={{ borderColor: brand, color: brand }}
               >
                 Explorar Servicios <ChevronRight size={18} />
               </Link>
@@ -145,67 +149,55 @@ export default function LandingClient({
         </div>
       </section>
 
-      {/* --- FEATURES GRID --- */}
-      <section className="py-24 bg-slate-50 overflow-hidden">
-        <div className="container mx-auto px-6 md:px-12">
-          <div className="flex overflow-x-auto md:grid md:grid-cols-3 gap-8 snap-x snap-mandatory hide-scrollbar pb-8">
-            {[
-              { icon: Shield, t: "Seguridad Certificada", d: "Cada unidad cuenta con protocolos de seguridad rigurosos y monitoreo satelital activo para su tranquilidad." },
-              { icon: Clock, t: "Puntualidad Absoluta", d: "Entendemos el valor del tiempo. Nuestros procesos logísticos garantizan llegadas exactas en cada compromiso." },
-              { icon: Zap, t: "Tecnología de Punta", d: "Plataforma digital integrada para el rastreo y gestión eficiente de todas nuestras operaciones en tiempo real." }
-            ].map((f, i) => (
-              <div key={i} className="min-w-[85vw] md:min-w-0 snap-center shrink-0 p-10 rounded-3xl bg-white border border-slate-100 shadow-sm transition-all hover:-translate-y-2 hover:shadow-xl group">
-                <div 
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"
-                  style={{ backgroundColor: `${brand}15`, color: brand }}
-                >
-                  <f.icon size={32} />
+      {/* --- Rest of content using internal Icon mapping --- */}
+      <section className="py-24 bg-slate-50">
+        <div className="container mx-auto px-6 md:px-12 text-center">
+           <h2 className="text-2xl font-black uppercase tracking-widest mb-12">Nuestra Propuesta de Valor</h2>
+           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                { icon: Shield, t: "Seguridad Certificada", d: "Protocolos internacionales de protección." },
+                { icon: Clock, t: "Puntualidad Absoluta", d: "Gestión de tiempos optimizada por IA." },
+                { icon: Zap, t: "Tecnología Real-Time", d: "Rastreo y control total desde su móvil." }
+              ].map((f, i) => (
+                <div key={i} className="bg-white p-10 rounded-3xl border border-slate-100 shadow-sm hover:shadow-xl transition-all">
+                   <div className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-6" style={{ backgroundColor: `${brand}15`, color: brand }}>
+                      <f.icon size={24} />
+                   </div>
+                   <h3 className="font-black uppercase mb-4 text-sm">{f.t}</h3>
+                   <p className="text-xs text-slate-500 leading-relaxed">{f.d}</p>
                 </div>
-                <h3 className="text-xl font-black uppercase tracking-tight mb-4">{f.t}</h3>
-                <p className="text-slate-500 leading-relaxed text-sm">{f.d}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+           </div>
         </div>
       </section>
 
-      {/* --- VIDEO SECTION --- */}
+      {/* --- VIDEO --- */}
       {vcard.video_url && (
-        <section id="video" className="bg-slate-900 py-24 md:py-32 relative overflow-hidden text-white">
-          <div className="container mx-auto px-6 md:px-12 relative z-10">
-            <div className="max-w-5xl mx-auto text-center space-y-16">
-              <div className="space-y-4 px-6">
-                <p className="text-xs font-black uppercase tracking-[0.4em]" style={{ color: brand }}>Comercial Corporativo</p>
-                <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">Nuestra Operación <span className="text-white/30 italic">en Movimiento</span></h2>
+        <section id="video" className="bg-slate-900 py-24 text-white">
+           <div className="container mx-auto px-6">
+              <div className="max-w-4xl mx-auto rounded-[40px] overflow-hidden border border-white/10 shadow-2xl">
+                 <iframe src={getEmbedUrl(vcard.video_url)} className="w-full aspect-video" allowFullScreen />
               </div>
-              <div className="relative aspect-video rounded-3xl md:rounded-[60px] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.5)] border border-white/10">
-                <iframe src={getEmbedUrl(vcard.video_url)} className="w-full h-full" allowFullScreen />
-              </div>
-            </div>
-          </div>
+           </div>
         </section>
       )}
 
-      {/* --- FOOTER SLIM --- */}
-      <footer className="bg-slate-950 pt-12 pb-8 border-t border-white/5 text-white">
-        <div className="container mx-auto px-6 md:px-12 text-center space-y-8">
-          <div className="flex flex-col items-center gap-4">
-             {tenant.logo_url ? (
-                <img src={tenant.logo_url} alt={tenant.name} className="h-8 w-auto grayscale brightness-200 opacity-50" />
-              ) : (
-                <span className="text-xl font-black text-white/20 uppercase">{tenant.name}</span>
-              )}
-              <div className="flex gap-6">
-                {socials.map(s => (
-                  <Link key={s.id} href={s.url} target="_blank" className="text-white/20 hover:text-white transition-colors" style={{ color: scrolled ? 'inherit' : 'rgba(255,255,255,0.2)' }}>
-                    <s.icon size={20} />
+      {/* --- FOOTER CLEAN --- */}
+      <footer className="bg-slate-950 py-12 text-white border-t border-white/5">
+        <div className="container mx-auto px-6 text-center space-y-8">
+           <div className="flex justify-center gap-4">
+              {socialLinks.map(s => {
+                const Icon = IconMap[s.id] || Globe;
+                return (
+                  <Link key={s.id} href={s.url} target="_blank" className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center hover:bg-white/10 transition-all">
+                    <Icon size={18} />
                   </Link>
-                ))}
-              </div>
-          </div>
-          <p className="text-[10px] font-bold text-white/10 uppercase tracking-[0.2em]">
-            © {new Date().getFullYear()} {tenant.name} | Powered by ActivaQR
-          </p>
+                );
+              })}
+           </div>
+           <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-30">
+              © {new Date().getFullYear()} {tenant.name} | ActivaQR Ecosystem
+           </p>
         </div>
       </footer>
     </div>

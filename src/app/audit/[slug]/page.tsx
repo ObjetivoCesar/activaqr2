@@ -1,7 +1,6 @@
 import { getTenantBySlug, getUnitsByTenant } from '@/lib/dal';
 import { notFound } from 'next/navigation';
 import LandingClient from './LandingClient';
-import { FacebookIcon, InstagramIcon, WhatsappIcon, TiktokIcon } from '@/components/SocialIcons';
 
 export const dynamic = 'force-dynamic';
 
@@ -67,11 +66,12 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
         'Monitoreo Satelital Real-Time', 'Mantenimiento Preventivo Certificado'
       ]);
 
-  const socials = [
-    { id: 'instagram', icon: InstagramIcon, url: vcard.instagram, label: 'Instagram' },
-    { id: 'whatsapp', icon: WhatsappIcon, url: vcard.whatsapp_url || `https://wa.me/${tenant.whatsapp_number}`, label: 'WhatsApp' },
-    { id: 'facebook', icon: FacebookIcon, url: vcard.facebook, label: 'Facebook' },
-    { id: 'tiktok', icon: TiktokIcon, url: vcard.tiktok, label: 'TikTok' },
+  // ENVIAMOS SOLO DATOS PUROS (No iconos)
+  const socialLinks = [
+    { id: 'instagram', url: vcard.instagram, label: 'Instagram' },
+    { id: 'whatsapp', url: vcard.whatsapp_url || `https://wa.me/${tenant.whatsapp_number}`, label: 'WhatsApp' },
+    { id: 'facebook', url: vcard.facebook, label: 'Facebook' },
+    { id: 'tiktok', url: vcard.tiktok, label: 'TikTok' },
   ].filter(s => s.url?.startsWith('http'));
 
   const vcardData = [
@@ -94,7 +94,7 @@ export default async function LandingPage({ params }: { params: Promise<{ slug: 
       brandContrast={brandContrast}
       vcard={vcard}
       services={services}
-      socials={socials}
+      socialLinks={socialLinks}
       vcardUrl={vcardUrl}
     />
   );
