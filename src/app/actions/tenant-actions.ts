@@ -74,7 +74,7 @@ export async function sendBroadcastMessage(tenantId: string, message: string) {
     }
 
     // 2. Extraer números únicos
-    const numbers = [...new Set(units.map(u => u.notification_number).filter(Boolean))];
+    const numbers = [...new Set(units.map((u: any) => u.notification_number).filter(Boolean))];
 
     // 3. Enviar mensajes (Idealmente en paralelo o con una pequeña cola para evitar bloqueos)
     const results = await Promise.allSettled(
