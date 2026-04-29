@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers/Providers";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -17,8 +18,6 @@ export const metadata: Metadata = {
   title: "ActivaQR Pro | Gestión Inteligente de Flotas",
   description: "Sistema avanzado de gestión de cooperativas y seguridad de pasajeros.",
 };
-
-import { Providers } from "@/components/providers/Providers";
 
 export default function RootLayout({
   children,
