@@ -7,7 +7,16 @@ const supabaseAdmin = createClient(
 
 async function createProTemplate() {
   const slug = 'nexus-logistics';
-  console.log(`Creando plantilla Pro para: ${slug}...`);
+  const email = 'ceo@nexus-logistics.com';
+  
+  console.log(`Verificando existencia de: ${slug}...`);
+
+  // 1. Buscar si ya existe
+  const { data: existing } = await supabaseAdmin
+    .from('activaqr2_tenants')
+    .select('id')
+    .eq('linked_email', email)
+    .maybeSingle();
 
   const vcard_name = JSON.stringify({
     name: "Nexus Global Logistics",
@@ -29,25 +38,24 @@ async function createProTemplate() {
     google_maps_url: "https://goo.gl/maps/xyz"
   });
 
-  const { data: tenant, error: tenantError } = await supabaseAdmin
-    .from('activaqr2_tenants')
-    .upsert({
-      name: "Nexus Global Logistics",
-      linked_email: "ceo@nexus-logistics.com",
-      brand_color: "#001549",
-      logo_url: "https://www.activaqr.com/_next/image?url=%2Fimages%2Flogo_header.png&w=256&q=75",
-      vcard_name: vcard_name,
-      subscription_status: 'active'
-    }, { onConflict: 'linked_email' })
-    .select()
-    .single();
+  const tenantData = {
+    name: "Nexus Global Logistics",
+    linked_email: email,
+    brand_color: "#001549",
+    logo_url: "https://www.activaqr.com/_next/image?url=%2Fimages%2Flogo_header.png&w=256&q=75",
+    vcard_name: vcard_name,
+    subscription_status: 'active'
+  };
 
-  if (tenantError) {
-    console.error('Error creando tenant:', tenantError);
+  if (existing) {
+    console.log('Actualizando tenant existente...');
+    await supabaseAdmin.from('activaqr2_tenants').update(tenantData).eq('id', existing.id);
   } else {
-    console.log('✅ ¡Nexus Logistics Creado!');
-    console.log(`URL de prueba: http://localhost:3006/p/${slug}`);
+    console.log('Insertando nuevo tenant...');
+    await supabaseAdmin.from('activaqr2_tenants').insert(tenantData);
   }
+
+  console.log('✅ ¡Nexus Logistics sincronizado en la Base de Datos!');
 }
 
 createProTemplate();

@@ -522,7 +522,7 @@ export default function SettingsView({ tenant, brandColor, units }: SettingsView
                             <button
                               type="button"
                               onClick={() => {
-                                const newServices = formData.services.filter((_, i) => i !== index);
+                                const newServices = formData.services.filter((_: any, i: any) => i !== index);
                                 setFormData({ ...formData, services: newServices });
                               }}
                               className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors shrink-0"
