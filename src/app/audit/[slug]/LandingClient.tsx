@@ -107,17 +107,23 @@ export default function LandingClient({
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent md:from-slate-950 md:via-slate-950/60" />
         
         <div className="relative z-10 container mx-auto px-6 md:px-12 pt-20">
-          <div className="max-w-3xl space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: brand }} />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">{copy.heroSubtitle}</span>
+          <div className="max-w-4xl space-y-8">
+            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-md">
+              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-white/90">{copy.heroSubtitle}</span>
             </div>
-            <h1 className="text-5xl md:text-8xl font-black text-white leading-[0.95] tracking-tighter uppercase drop-shadow-2xl">
-              {copy.heroTitle.split(' ').map((word: string, i: number) => (
-                <span key={i} style={{ color: i === 2 ? brand : 'inherit' }}>{word}<br className="hidden md:block" /> </span>
-              ))}
+            <h1 className="text-5xl md:text-8xl font-black text-white leading-[0.95] tracking-tighter uppercase">
+              {copy.heroTitle.split(' ').map((word: string, i: number) => {
+                if (word.toLowerCase() === 'logistics' || i === 2) {
+                  return (
+                    <span key={i} className="inline-block bg-white text-slate-950 px-4 md:px-6 py-1 rounded-2xl transform -skew-x-6 mr-4 mb-2">
+                      {word}
+                    </span>
+                  );
+                }
+                return <span key={i} className="mr-4 inline-block">{word} </span>;
+              })}
             </h1>
-            <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-xl font-medium">
+            <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-2xl font-medium">
               {copy.heroText}
             </p>
             <div className="flex flex-wrap gap-4 pt-6">
@@ -150,9 +156,9 @@ export default function LandingClient({
         </div>
       </section>
 
-      {/* --- ABOUT SECTION (CONTRASTE: FONDO BLANCO = LETRAS AZULES) --- */}
+      {/* --- ABOUT SECTION --- */}
       <section className="py-24 md:py-32 bg-white">
-        <div className="container mx-auto px-6 md:px-12">
+        <div className="container mx-auto px-6 md:px-12 text-slate-900">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="space-y-8">
               <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Trayectoria y Confianza</p>
@@ -180,7 +186,7 @@ export default function LandingClient({
         </div>
       </section>
 
-      {/* --- SERVICES GRID (CONTRASTE: FONDO GRIS CLARO = LETRAS AZULES) --- */}
+      {/* --- SERVICES GRID --- */}
       <section id="servicios" className="py-24 md:py-32 bg-slate-50">
         <div className="container mx-auto px-6 md:px-12">
           <div className="mb-16 space-y-4 text-center md:text-left">
@@ -225,7 +231,7 @@ export default function LandingClient({
         </section>
       )}
 
-      {/* --- FLEET DIRECTORY (CONTRASTE: FONDO BLANCO = LETRAS AZULES) --- */}
+      {/* --- FLEET DIRECTORY --- */}
       <section id="unidades" className="py-24 md:py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12">
           <div className="mb-16">
@@ -247,18 +253,19 @@ export default function LandingClient({
         </div>
       </section>
 
-      {/* --- GOOGLE REVIEWS (STYLE ACTIVAQR 1 - DARK CARDS) --- */}
+      {/* --- GOOGLE REVIEWS (CONTRASTE MEJORADO) --- */}
       <section className="py-24 md:py-32 bg-slate-950 text-white overflow-hidden">
         <div className="container mx-auto px-6 text-center space-y-12">
            <div className="space-y-4">
               <div className="flex justify-center gap-1">
-                {[...Array(5)].map((_, i) => <Star key={i} size={24} fill="#fbbf24" className="text-[#fbbf24]" />)}
+                {[...Array(5)].map((_, i) => <Star key={i} size={28} fill="#fbbf24" className="text-[#fbbf24]" />)}
               </div>
-              <p className="text-7xl md:text-9xl font-black tracking-tighter leading-none" style={{ color: brand }}>5.0</p>
-              <h3 className="text-xl font-black uppercase tracking-[0.3em] text-white/60">4 RESEÑAS EN <span className="text-brand" style={{ color: brand }}>GOOGLE BUSINESS</span></h3>
+              {/* CAMBIO: 5.0 A BLANCO PURO */}
+              <p className="text-8xl md:text-[140px] font-black tracking-tighter leading-none text-white">5.0</p>
+              <h3 className="text-xl font-black uppercase tracking-[0.4em] text-white/90">4 RESEÑAS EN <span className="text-[#fbbf24]">GOOGLE BUSINESS</span></h3>
            </div>
           
-           <p className="text-sm italic text-white/40 max-w-2xl mx-auto">"Gracias a nuestra comunidad por calificarnos con 5 estrellas. ¡Tu opinión nos ayuda a crecer!"</p>
+           <p className="text-sm italic text-white/60 max-w-2xl mx-auto font-medium">"Gracias a nuestra comunidad por calificarnos con 5 estrellas. ¡Tu opinión nos ayuda a crecer!"</p>
 
            <div className="flex overflow-x-auto gap-6 snap-x hide-scrollbar py-8 max-w-6xl mx-auto text-left">
             {[
@@ -277,28 +284,29 @@ export default function LandingClient({
                       {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="#fbbf24" className="text-[#fbbf24]" />)}
                    </div>
                 </div>
-                <p className="text-sm italic text-white/70 leading-relaxed">"{r.t}"</p>
+                <p className="text-sm italic text-white/80 leading-relaxed font-medium">"{r.t}"</p>
                 <div className="flex justify-end">
-                   <span className="text-[10px] font-black uppercase text-brand" style={{ color: brand }}>Ver más →</span>
+                   <span className="text-[10px] font-black uppercase" style={{ color: brand }}>Ver más →</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+          <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all text-white">
              <MessageSquare size={18} className="text-brand" style={{ color: brand }} /> VER TODAS LAS RESEÑAS Y CÓMO LLEGAR
           </Link>
         </div>
       </section>
 
-      {/* --- CONTACT & MAP (CONTRASTE: FONDO BLANCO = LETRAS AZULES) --- */}
+      {/* --- CONTACT & MAP (AÑADIENDO ICONOS DE REDES SOCIALES VISIBLES) --- */}
       <section id="contacto" className="py-24 md:py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div className="space-y-10">
+          <div className="space-y-12">
             <div className="space-y-4">
-              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Contacto</p>
+              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Canales Directos</p>
               <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]" style={{ color: brand }}>Ubícanos y Conecta</h2>
             </div>
+            
             <div className="space-y-6">
               <div className="flex items-center gap-4 p-6 rounded-3xl bg-slate-50 border border-slate-100">
                 <MapPin size={24} style={{ color: brand }} />
@@ -306,24 +314,41 @@ export default function LandingClient({
               </div>
               <div className="flex items-center gap-4 p-6 rounded-3xl bg-slate-50 border border-slate-100">
                 <Phone size={24} style={{ color: brand }} />
-                <div><p className="text-[10px] font-black uppercase text-slate-400">WhatsApp</p><p className="text-sm font-bold text-slate-900">+{tenant.whatsapp_number}</p></div>
+                <div><p className="text-[10px] font-black uppercase text-slate-400">WhatsApp Oficial</p><p className="text-sm font-bold text-slate-900">+{tenant.whatsapp_number}</p></div>
               </div>
             </div>
-            <div className="flex gap-4">
-              {socialLinks.map(s => {
-                const Icon = IconMap[s.id] || Globe;
-                return (
-                  <Link key={s.id} href={s.url} target="_blank" className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center hover:scale-110 transition-all" style={{ color: brand }}>
-                    <Icon size={28} />
-                  </Link>
-                );
-              })}
+
+            {/* REDES SOCIALES A COLOR */}
+            <div className="pt-6">
+              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 mb-6">Síguenos en Redes</p>
+              <div className="flex flex-wrap gap-4">
+                {socialLinks.map(s => {
+                  const Icon = IconMap[s.id] || Globe;
+                  const colors: Record<string, string> = {
+                    whatsapp: 'bg-[#25D366]',
+                    instagram: 'bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7]',
+                    facebook: 'bg-[#1877F2]',
+                    tiktok: 'bg-[#000000]'
+                  };
+                  return (
+                    <Link 
+                      key={s.id} 
+                      href={s.url} 
+                      target="_blank" 
+                      className={`w-14 h-14 rounded-2xl flex items-center justify-center text-white shadow-lg hover:scale-110 transition-all ${colors[s.id] || 'bg-slate-900'}`}
+                    >
+                      <Icon size={24} />
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </div>
-          <div className="aspect-square bg-slate-900 rounded-[40px] overflow-hidden relative group">
+          
+          <div className="aspect-square bg-slate-900 rounded-[60px] overflow-hidden relative group shadow-2xl">
              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop')] bg-cover opacity-40 transition-transform duration-1000 group-hover:scale-110" />
              <div className="absolute inset-0 flex items-center justify-center">
-                <Link href={vcard.google_maps_url || '#'} target="_blank" className="px-8 py-4 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Abrir Mapa</Link>
+                <Link href={vcard.google_maps_url || '#'} target="_blank" className="px-8 py-4 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Ver Mapa en Google</Link>
              </div>
           </div>
         </div>
