@@ -73,13 +73,13 @@ export default function LandingClient({
       {/* --- NAVBAR --- */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 h-20 px-6 md:px-12 flex items-center justify-between transition-all duration-300 backdrop-blur-md ${
-          scrolled ? 'bg-slate-950 border-b-2 shadow-2xl' : 'bg-slate-900/40 border-b border-white/10'
+          scrolled ? 'bg-slate-900 border-b-2 shadow-2xl' : 'bg-transparent border-b border-white/5'
         }`}
-        style={{ borderBottomColor: scrolled ? brand : 'rgba(255,255,255,0.05)' }}
+        style={{ borderBottomColor: scrolled ? brand : 'transparent' }}
       >
         <div className="flex items-center gap-4">
           {tenant.logo_url ? (
-            <img src={tenant.logo_url} alt={tenant.name} className="h-10 md:h-12 w-auto object-contain brightness-110" />
+            <img src={tenant.logo_url} alt={tenant.name} className="h-10 md:h-12 w-auto object-contain brightness-0 invert" />
           ) : (
             <span className="text-xl font-black text-white uppercase tracking-tighter">
               {tenant.name} <span style={{ color: brand }}>.</span>
@@ -87,14 +87,14 @@ export default function LandingClient({
           )}
         </div>
         <div className="hidden md:flex items-center gap-8">
-          <Link href="#servicios" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80 hover:text-white transition-colors">Servicios</Link>
-          <Link href="#unidades" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80 hover:text-white transition-colors">Flota</Link>
-          <Link href="#contacto" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/80 hover:text-white transition-colors">Contacto</Link>
+          <Link href="#servicios" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Servicios</Link>
+          <Link href="#unidades" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Flota</Link>
+          <Link href="#contacto" className="text-[10px] font-black uppercase tracking-[0.2em] text-white/70 hover:text-white transition-colors">Contacto</Link>
         </div>
         <Link 
           href={`https://wa.me/${tenant.whatsapp_number}`} 
           target="_blank" 
-          className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 shadow-lg"
+          className="px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105"
           style={{ backgroundColor: brand, color: brandContrast }}
         >
           Soporte 24/7
@@ -104,7 +104,7 @@ export default function LandingClient({
       {/* --- HERO SECTION --- */}
       <section className="relative min-h-screen flex items-center overflow-hidden bg-slate-950">
         <div className="absolute inset-0 bg-cover bg-right md:bg-center transition-all duration-1000" style={{ backgroundImage: `url('${heroDesktop}')` }} />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent md:from-slate-950 md:via-slate-950/60" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/70 to-transparent md:from-slate-950 md:via-slate-950/60" />
         
         <div className="relative z-10 container mx-auto px-6 md:px-12 pt-20">
           <div className="max-w-3xl space-y-6">
@@ -117,14 +117,14 @@ export default function LandingClient({
                 <span key={i} style={{ color: i === 2 ? brand : 'inherit' }}>{word}<br className="hidden md:block" /> </span>
               ))}
             </h1>
-            <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-xl font-medium drop-shadow-lg">
+            <p className="text-lg md:text-xl text-white/80 leading-relaxed max-w-xl font-medium">
               {copy.heroText}
             </p>
             <div className="flex flex-wrap gap-4 pt-6">
               <Link 
                 href={`https://wa.me/${tenant.whatsapp_number}`} 
                 target="_blank" 
-                className="bg-[#25D366] hover:bg-[#22c35e] px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 text-white transition-all hover:-translate-y-1 shadow-2xl shadow-green-500/40"
+                className="bg-[#25D366] hover:bg-[#22c35e] px-10 py-5 rounded-2xl text-xs font-black uppercase tracking-widest flex items-center gap-3 text-white transition-all hover:-translate-y-1 shadow-lg shadow-green-500/30"
               >
                 <MessageSquare size={18} /> Contactar Ahora
               </Link>
@@ -143,49 +143,49 @@ export default function LandingClient({
             ].map((s, i) => (
               <div key={i} className="space-y-1">
                 <p className="text-3xl md:text-5xl font-black text-white">{s.val}</p>
-                <p className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">{s.lab}</p>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em]">{s.lab}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- ABOUT SECTION (HIGH CONTRAST) --- */}
+      {/* --- ABOUT SECTION (CONTRASTE: FONDO BLANCO = LETRAS AZULES) --- */}
       <section className="py-24 md:py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
             <div className="space-y-8">
-              <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500" style={{ color: `${brand}` }}>Trayectoria y Confianza</p>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-slate-950">{copy.aboutTitle}</h2>
-              <p className="text-slate-700 text-lg leading-relaxed font-medium">{copy.aboutText}</p>
+              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Trayectoria y Confianza</p>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]" style={{ color: brand }}>{copy.aboutTitle}</h2>
+              <p className="text-slate-600 text-lg leading-relaxed">{copy.aboutText}</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2" style={{ color: brand }}><CheckCircle2 size={20} /> <span className="text-xs font-black uppercase text-slate-900">Misión</span></div>
-                  <p className="text-sm text-slate-600 font-medium">{copy.mission}</p>
+                  <p className="text-sm text-slate-500">{copy.mission}</p>
                 </div>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2" style={{ color: brand }}><CheckCircle2 size={20} /> <span className="text-xs font-black uppercase text-slate-900">Visión</span></div>
-                  <p className="text-sm text-slate-600 font-medium">{copy.vision}</p>
+                  <p className="text-sm text-slate-500">{copy.vision}</p>
                 </div>
               </div>
-              <Link href={vcardUrl} download className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest inline-flex items-center gap-3 transition-all shadow-lg hover:brightness-110" style={{ backgroundColor: brand, color: brandContrast }}>
+              <Link href={vcardUrl} download className="px-8 py-4 rounded-xl text-xs font-black uppercase tracking-widest inline-flex items-center gap-3 transition-all" style={{ backgroundColor: brand, color: brandContrast }}>
                 <Download size={18} /> Descargar Tarjeta Digital
               </Link>
             </div>
             <div className="relative">
-              <div className="absolute -inset-4 rounded-[40px] rotate-2 opacity-20" style={{ backgroundColor: brand }} />
+              <div className="absolute -inset-4 rounded-[40px] rotate-3 opacity-10" style={{ backgroundColor: brand }} />
               <img src={aboutImg} alt="About" className="relative rounded-[40px] w-full aspect-[4/5] object-cover shadow-2xl" />
             </div>
           </div>
         </div>
       </section>
 
-      {/* --- SERVICES GRID (HIGH CONTRAST) --- */}
+      {/* --- SERVICES GRID (CONTRASTE: FONDO GRIS CLARO = LETRAS AZULES) --- */}
       <section id="servicios" className="py-24 md:py-32 bg-slate-50">
         <div className="container mx-auto px-6 md:px-12">
           <div className="mb-16 space-y-4 text-center md:text-left">
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500" style={{ color: brand }}>Portafolio de Excelencia</p>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-slate-950">Servicios Especializados</h2>
+            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Portafolio</p>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]" style={{ color: brand }}>Servicios Especializados</h2>
           </div>
           <div className="flex overflow-x-auto md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 pb-8 snap-x snap-mandatory hide-scrollbar">
             {services.map((svc: string, i: number) => {
@@ -197,12 +197,12 @@ export default function LandingClient({
               ];
               const bgImg = imgs[i % imgs.length];
               return (
-                <div key={i} className="min-w-[85vw] md:min-w-0 snap-center shrink-0 relative h-[450px] rounded-[32px] overflow-hidden group shadow-xl">
+                <div key={i} className="min-w-[85vw] md:min-w-0 snap-center shrink-0 relative h-[450px] rounded-[32px] overflow-hidden group">
                   <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url('${bgImg}?q=80&w=600&auto=format&fit=crop')` }} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
                   <div className="absolute inset-0 p-8 flex flex-col justify-end z-10">
-                    <h4 className="text-2xl font-black uppercase tracking-tight mb-4 text-white leading-tight">{svc.replace('• ', '')}</h4>
-                    <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="w-full py-4 rounded-xl bg-white text-slate-950 text-center font-black text-[10px] uppercase tracking-widest hover:bg-slate-100 transition-all shadow-lg">
+                    <h4 className="text-xl font-black uppercase tracking-tight mb-4 text-white">{svc.replace('• ', '')}</h4>
+                    <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="w-full py-4 rounded-xl bg-white text-black text-center font-black text-xs uppercase tracking-widest hover:scale-105 transition-all">
                       Cotizar Ahora
                     </Link>
                   </div>
@@ -215,106 +215,124 @@ export default function LandingClient({
 
       {/* --- VIDEO SECTION --- */}
       {vcard.video_url && (
-        <section id="video" className="bg-slate-950 py-24 text-white overflow-hidden">
+        <section id="video" className="bg-slate-900 py-24 text-white overflow-hidden">
           <div className="container mx-auto px-6 text-center space-y-16">
             <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter">Operación <span className="text-white/30 italic">en Vivo</span></h2>
-            <div className="max-w-5xl mx-auto rounded-[40px] overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.5)] border border-white/10">
+            <div className="max-w-5xl mx-auto rounded-[40px] overflow-hidden shadow-2xl border border-white/10">
               <iframe src={getEmbedUrl(vcard.video_url)} className="w-full aspect-video" allowFullScreen />
             </div>
           </div>
         </section>
       )}
 
-      {/* --- FLEET DIRECTORY (HIGH CONTRAST) --- */}
+      {/* --- FLEET DIRECTORY (CONTRASTE: FONDO BLANCO = LETRAS AZULES) --- */}
       <section id="unidades" className="py-24 md:py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12">
           <div className="mb-16">
-            <p className="text-xs font-black uppercase tracking-[0.3em] text-slate-500" style={{ color: brand }}>Directorio en Tiempo Real</p>
-            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase text-slate-950">Estado de Unidades</h2>
+            <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Directorio de Flota</p>
+            <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase" style={{ color: brand }}>Estado de Unidades</h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {(units || []).slice(0, 10).map((unit: any) => (
-              <div key={unit.id} className="bg-slate-50 border-2 border-slate-100 p-8 rounded-[32px] hover:border-brand/40 transition-all group shadow-sm">
+              <div key={unit.id} className="bg-slate-50 border border-slate-100 p-6 rounded-[24px] hover:border-brand/30 transition-all group">
                 <div className="flex items-center justify-between mb-8">
-                  <Car size={24} className="text-slate-400 group-hover:text-brand" style={{ color: brand }} />
-                  <span className="text-[9px] font-black uppercase px-2 py-1 bg-green-500/10 text-green-600 rounded-md">Online</span>
+                  <Car size={24} style={{ color: brand }} />
+                  <span className="text-[10px] font-black uppercase px-2 py-1 bg-green-500/10 text-green-600 rounded-md">Activa</span>
                 </div>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Cod. Unidad</p>
-                <p className="text-4xl font-black text-slate-950">{unit.unit_code}</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Unidad</p>
+                <p className="text-3xl font-black text-slate-900">{unit.unit_code}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- GOOGLE REVIEWS (HIGH CONTRAST) --- */}
+      {/* --- GOOGLE REVIEWS (STYLE ACTIVAQR 1 - DARK CARDS) --- */}
       <section className="py-24 md:py-32 bg-slate-950 text-white overflow-hidden">
-        <div className="container mx-auto px-6 text-center space-y-10">
-          <div className="flex justify-center gap-1">
-            {[...Array(5)].map((_, i) => <Star key={i} size={28} fill={brand} style={{ color: brand }} />)}
-          </div>
-          <p className="text-9xl md:text-[180px] font-black tracking-tighter leading-none" style={{ color: brand }}>5.0</p>
-          <h3 className="text-2xl font-black uppercase tracking-[0.2em] text-white/90">Excelencia Validada</h3>
-          <div className="flex overflow-x-auto gap-8 snap-x hide-scrollbar py-10 max-w-4xl mx-auto text-left">
+        <div className="container mx-auto px-6 text-center space-y-12">
+           <div className="space-y-4">
+              <div className="flex justify-center gap-1">
+                {[...Array(5)].map((_, i) => <Star key={i} size={24} fill="#fbbf24" className="text-[#fbbf24]" />)}
+              </div>
+              <p className="text-7xl md:text-9xl font-black tracking-tighter leading-none" style={{ color: brand }}>5.0</p>
+              <h3 className="text-xl font-black uppercase tracking-[0.3em] text-white/60">4 RESEÑAS EN <span className="text-brand" style={{ color: brand }}>GOOGLE BUSINESS</span></h3>
+           </div>
+          
+           <p className="text-sm italic text-white/40 max-w-2xl mx-auto">"Gracias a nuestra comunidad por calificarnos con 5 estrellas. ¡Tu opinión nos ayuda a crecer!"</p>
+
+           <div className="flex overflow-x-auto gap-6 snap-x hide-scrollbar py-8 max-w-6xl mx-auto text-left">
             {[
-              { n: "Roberto García", t: "El mejor servicio de la ciudad. Puntualidad impecable y seguridad total." },
-              { n: "Lucía Méndez", t: "Unidades en excelente estado y conductores muy profesionales." }
+              { n: "Guido Daniel Rojas", t: "Excelente servicio, recomendado 🤝", img: "https://i.pravatar.cc/150?u=guido" },
+              { n: "Patricio Reyes", t: "Excelente. Te asesora y permite mejorar tus productos", img: "https://i.pravatar.cc/150?u=patricio" },
+              { n: "Astrid Davila", t: "Me encantó el trabajo que realizó. Fue muy profesional, paciente y...", img: "https://i.pravatar.cc/150?u=astrid" }
             ].map((r, i) => (
-              <div key={i} className="min-w-[80vw] md:min-w-[420px] snap-center p-10 rounded-[40px] bg-white/5 border border-white/10 backdrop-blur-sm">
-                <p className="text-lg italic text-white/80 mb-8 leading-relaxed">"{r.t}"</p>
-                <p className="text-xs font-black uppercase tracking-widest text-white">{r.n}</p>
+              <div key={i} className="min-w-[85vw] md:min-w-[380px] snap-center p-8 rounded-[32px] bg-white/5 border border-white/10 backdrop-blur-xl space-y-6">
+                <div className="flex items-center gap-4">
+                   <img src={r.img} alt={r.n} className="w-12 h-12 rounded-full border-2 border-brand" style={{ borderColor: brand }} />
+                   <div>
+                      <p className="text-sm font-black uppercase text-white">{r.n}</p>
+                      <p className="text-[10px] text-white/40">Hace 2 meses</p>
+                   </div>
+                   <div className="ml-auto flex gap-0.5">
+                      {[...Array(5)].map((_, i) => <Star key={i} size={12} fill="#fbbf24" className="text-[#fbbf24]" />)}
+                   </div>
+                </div>
+                <p className="text-sm italic text-white/70 leading-relaxed">"{r.t}"</p>
+                <div className="flex justify-end">
+                   <span className="text-[10px] font-black uppercase text-brand" style={{ color: brand }}>Ver más →</span>
+                </div>
               </div>
             ))}
           </div>
+
+          <Link href={`https://wa.me/${tenant.whatsapp_number}`} target="_blank" className="inline-flex items-center gap-3 px-10 py-5 rounded-2xl bg-white/5 border border-white/10 text-xs font-black uppercase tracking-widest hover:bg-white/10 transition-all">
+             <MessageSquare size={18} className="text-brand" style={{ color: brand }} /> VER TODAS LAS RESEÑAS Y CÓMO LLEGAR
+          </Link>
         </div>
       </section>
 
-      {/* --- CONTACT & MAP (HIGH CONTRAST) --- */}
+      {/* --- CONTACT & MAP (CONTRASTE: FONDO BLANCO = LETRAS AZULES) --- */}
       <section id="contacto" className="py-24 md:py-32 bg-white">
         <div className="container mx-auto px-6 md:px-12 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-          <div className="space-y-12">
+          <div className="space-y-10">
             <div className="space-y-4">
-              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Canales de Atención</p>
-              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9] text-slate-950">Ubícanos y Conecta</h2>
+              <p className="text-xs font-black uppercase tracking-[0.3em]" style={{ color: brand }}>Contacto</p>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-[0.9]" style={{ color: brand }}>Ubícanos y Conecta</h2>
             </div>
             <div className="space-y-6">
-              <div className="flex items-center gap-6 p-8 rounded-[32px] bg-slate-50 border-2 border-slate-100 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${brand}15`, color: brand }}><MapPin size={28} /></div>
-                <div><p className="text-[10px] font-black uppercase text-slate-500 mb-1">Dirección Central</p><p className="text-lg font-bold text-slate-900">{vcard.address || 'Quito, Ecuador'}</p></div>
+              <div className="flex items-center gap-4 p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                <MapPin size={24} style={{ color: brand }} />
+                <div><p className="text-[10px] font-black uppercase text-slate-400">Dirección</p><p className="text-sm font-bold text-slate-900">{vcard.address || 'Quito, Ecuador'}</p></div>
               </div>
-              <div className="flex items-center gap-6 p-8 rounded-[32px] bg-slate-50 border-2 border-slate-100 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0" style={{ backgroundColor: `${brand}15`, color: brand }}><Phone size={28} /></div>
-                <div><p className="text-[10px] font-black uppercase text-slate-500 mb-1">WhatsApp 24/7</p><p className="text-lg font-bold text-slate-900">+{tenant.whatsapp_number}</p></div>
+              <div className="flex items-center gap-4 p-6 rounded-3xl bg-slate-50 border border-slate-100">
+                <Phone size={24} style={{ color: brand }} />
+                <div><p className="text-[10px] font-black uppercase text-slate-400">WhatsApp</p><p className="text-sm font-bold text-slate-900">+{tenant.whatsapp_number}</p></div>
               </div>
             </div>
             <div className="flex gap-4">
               {socialLinks.map(s => {
                 const Icon = IconMap[s.id] || Globe;
                 return (
-                  <Link key={s.id} href={s.url} target="_blank" className="w-16 h-16 rounded-2xl bg-slate-950 flex items-center justify-center hover:scale-110 transition-all shadow-xl" style={{ color: brand }}>
-                    <Icon size={32} />
+                  <Link key={s.id} href={s.url} target="_blank" className="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center hover:scale-110 transition-all" style={{ color: brand }}>
+                    <Icon size={28} />
                   </Link>
                 );
               })}
             </div>
           </div>
-          <div className="aspect-square bg-slate-900 rounded-[60px] overflow-hidden relative group shadow-2xl">
+          <div className="aspect-square bg-slate-900 rounded-[40px] overflow-hidden relative group">
              <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop')] bg-cover opacity-40 transition-transform duration-1000 group-hover:scale-110" />
              <div className="absolute inset-0 flex items-center justify-center">
-                <Link href={vcard.google_maps_url || '#'} target="_blank" className="px-10 py-5 bg-white text-slate-950 rounded-2xl text-xs font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Abrir Mapa Satelital</Link>
+                <Link href={vcard.google_maps_url || '#'} target="_blank" className="px-8 py-4 bg-white text-slate-900 rounded-xl text-xs font-black uppercase tracking-widest shadow-2xl hover:scale-105 transition-all">Abrir Mapa</Link>
              </div>
           </div>
         </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-slate-950 py-16 text-white/40 text-center border-t border-white/5">
+      <footer className="bg-slate-950 py-12 text-white/30 text-center border-t border-white/5">
         <div className="container mx-auto px-6 space-y-8">
-           <p className="text-[10px] font-black uppercase tracking-[0.5em] text-white/60">
-              © {new Date().getFullYear()} {tenant.name} | Nexus Logistics Network
-           </p>
-           <div className="w-1 h-1 bg-white/20 rounded-full mx-auto" />
-           <p className="text-[8px] font-bold uppercase tracking-widest opacity-30">Powered by ActivaQR Ecosystem</p>
+           <p className="text-[10px] font-black uppercase tracking-[0.4em]">© {new Date().getFullYear()} {tenant.name} | ActivaQR Ecosystem</p>
         </div>
       </footer>
     </div>
